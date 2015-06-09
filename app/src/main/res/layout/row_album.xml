@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="80dp">
+
+        <ImageView
+            android:id="@+id/album_image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:scaleType="fitXY"
+            android:layout_margin="@dimen/element_space"
+            android:layout_centerVertical="true"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_vertical"
+            android:layout_toRightOf="@id/album_image"
+            android:layout_toEndOf="@id/album_image"
+            android:layout_alignTop="@+id/album_image"
+            android:layout_alignBottom="@+id/album_image"
+            android:padding="@dimen/element_space"
+            android:layout_centerVertical="true">
+
+            <TextView
+                android:id="@+id/album_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/element_space"
+                android:layout_marginStart="@dimen/element_space"
+                />
+
+            <TextView
+                android:id="@+id/album_subtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/element_space"
+                android:layout_marginStart="@dimen/element_space"
+                android:visibility="gone"
+                />
+
+        </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/search_result_bg" />
+</RelativeLayout>
