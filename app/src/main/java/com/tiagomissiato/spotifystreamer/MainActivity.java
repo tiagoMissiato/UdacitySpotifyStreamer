@@ -13,7 +13,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 
 import com.tiagomissiato.spotifystreamer.adapter.AlbumAdapter;
 
@@ -22,9 +21,7 @@ import java.util.List;
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Artist;
-import kaaes.spotify.webapi.android.models.Artists;
 import kaaes.spotify.webapi.android.models.ArtistsPager;
-import kaaes.spotify.webapi.android.models.Pager;
 import retrofit.Callback;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
@@ -32,12 +29,12 @@ import retrofit.client.Response;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static String URL_SPOTIFY_ENDPOINT = "https://api.spotify.com/v1/search?type=artist&q=%s";
+    public static String URL_SPOTIFY_ENDPOINT = "https://api.spotify.com/v1/search?type=artist&q=*%s*";
 
     RecyclerView.LayoutManager mLayoutManager;
     RecyclerView albumList;
 
-    GetSpotifyInfo task = new GetSpotifyInfo();
+    SearchSpotifyTask task = new SearchSpotifyTask();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
                     if(task != null)
                         task.cancel(true);
 
-                    task = new GetSpotifyInfo();
+                    task = new SearchSpotifyTask();
                     task.execute(artistName.getText().toString());
                 }
             }
@@ -104,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private class GetSpotifyInfo extends AsyncTask<String, Void, Void> {
+    private class SearchSpotifyTask extends AsyncTask<String, Void, Void> {
         @Override
         protected Void doInBackground(String... artist) {
 
@@ -123,6 +120,8 @@ public class MainActivity extends AppCompatActivity {
                                 MainActivity.this.runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
+                                        for(Artist a : artists)
+                                            Log.i("DEBUG", a.name);
                                         populateList(artists);
                                     }
                                 });

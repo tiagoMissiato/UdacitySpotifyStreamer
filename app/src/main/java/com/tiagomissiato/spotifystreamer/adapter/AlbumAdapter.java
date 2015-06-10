@@ -2,6 +2,7 @@ package com.tiagomissiato.spotifystreamer.adapter;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -66,8 +67,8 @@ public class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.ViewHolder> 
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, int position) {
         Artist item = this.items.get(position);
-
-        viewHolder.albumTitle.setText(item.name);
+        Log.i(TAG, position + " - " + item.name);
+        viewHolder.albumTitle.setText(position + " - " + item.name);
         viewHolder.albumSubtitle.setVisibility(View.GONE);
         String correctImage = null;
         for(Image img : item.images){
@@ -79,7 +80,12 @@ public class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.ViewHolder> 
         if(correctImage != null) {
             Glide.with(mContext).load(correctImage)
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .error(R.drawable.acdc_cover)
+                    .error(R.drawable.place_holder)
+                    .into(viewHolder.albumImage);
+        } else {
+            int size = (int) mContext.getResources().getDimension(R.dimen.list_image_size);
+            Glide.with(mContext).load(R.drawable.place_holder)
+                    .override(size, size)
                     .into(viewHolder.albumImage);
         }
     }
