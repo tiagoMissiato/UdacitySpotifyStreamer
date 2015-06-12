@@ -36,6 +36,14 @@
                 android:ellipsize="end"
                 />
 
+            <TextView
+                android:id="@+id/album_subtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/element_space"
+                android:layout_marginStart="@dimen/element_space"
+                />
+
         </LinearLayout>
 
     <View

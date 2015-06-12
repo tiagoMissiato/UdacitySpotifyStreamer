@@ -6,5 +6,5 @@
     <dimen name="default_margin">16dp</dimen>
     <dimen name="element_space">8dp</dimen>
 
-    <dimen name="list_image_size">55dp</dimen>
+    <dimen name="list_image_size">70dp</dimen>
 </resources>

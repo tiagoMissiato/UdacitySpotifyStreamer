@@ -12,7 +12,6 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.tiagomissiato.spotifystreamer.R;
-import com.tiagomissiato.spotifystreamer.model.Album;
 
 import java.util.List;
 
@@ -22,33 +21,45 @@ import kaaes.spotify.webapi.android.models.Image;
 /**
  * Created by trigoleto on 11/27/14.
  */
-public class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.ViewHolder> {
-    private static final String TAG = AlbumAdapter.class.getSimpleName();
+public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder> {
+    private static final String TAG = ArtistAdapter.class.getSimpleName();
 
     Context mContext;
-    private List<Artist> items;
+    private static List<Artist> items;
+    OnItemClicked onItemClicked;
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
         TextView albumTitle;
         TextView albumSubtitle;
         ImageView albumImage;
+        OnItemClicked onItemClicked;
 
-        public ViewHolder(View iteView) {
+        public ViewHolder(View iteView, OnItemClicked onItemClicked) {
             super(iteView);
             this.albumTitle = (TextView) iteView.findViewById(R.id.album_title);
-            this.albumSubtitle = (TextView) iteView.findViewById(R.id.album_subtitle);
             this.albumImage = (ImageView) iteView.findViewById(R.id.album_image);
+            iteView.setOnClickListener(this);
+
+            this.onItemClicked = onItemClicked;
+        }
+
+        @Override
+        public void onClick(View view) {
+            if (onItemClicked != null){
+                onItemClicked.onClicked(items.get(getPosition()));
+            }
         }
     }
 
-    public AlbumAdapter(Context mContext, List<Artist> items) {
-        this.items = items;
+    public ArtistAdapter(Context mContext, List<Artist> items, OnItemClicked onItemClicked) {
+        ArtistAdapter.items = items;
         this.mContext = mContext;
+        this.onItemClicked = onItemClicked;
     }
 
     @Override
     public int getItemCount() {
-        return items.size();
+        return ArtistAdapter.items.size();
     }
 
 
@@ -61,33 +72,38 @@ public class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.ViewHolder> 
     public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
         View layout = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.row_album, null);
 
-        return new ViewHolder(layout);
+        return new ViewHolder(layout, onItemClicked);
     }
 
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, int position) {
-        Artist item = this.items.get(position);
-        Log.i(TAG, position + " - " + item.name);
-        viewHolder.albumTitle.setText(position + " - " + item.name);
-        viewHolder.albumSubtitle.setVisibility(View.GONE);
+        Artist item = ArtistAdapter.items.get(position);
+
+        viewHolder.albumTitle.setText(item.name);
         String correctImage = null;
         for(Image img : item.images){
-            if(img.width >= 195 && img.width <= 205)// put add and sub 5 to compare because in the URL there was some width 199, soh just in case;
+            // put add and sub 5 to compare because in the URL there was some width 199, soh just in case;
+            if(img.width >= 195 && img.width <= 305)
                 correctImage = img.url;
 
         }
 
         if(correctImage != null) {
             Glide.with(mContext).load(correctImage)
+                    .placeholder(R.drawable.place_holder)
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .error(R.drawable.place_holder)
+                    .override(200, 200)
                     .into(viewHolder.albumImage);
         } else {
-            int size = (int) mContext.getResources().getDimension(R.dimen.list_image_size);
             Glide.with(mContext).load(R.drawable.place_holder)
-                    .override(size, size)
+                    .placeholder(R.drawable.place_holder)
+                    .override(200, 200)
                     .into(viewHolder.albumImage);
         }
     }
 
+    public interface OnItemClicked{
+        void onClicked(Artist item);
+    }
 }

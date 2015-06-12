@@ -1,7 +1,9 @@
 package com.tiagomissiato.spotifystreamer;
 
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -12,10 +14,13 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 
-import com.tiagomissiato.spotifystreamer.adapter.AlbumAdapter;
+import com.tiagomissiato.spotifystreamer.adapter.ArtistAdapter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import kaaes.spotify.webapi.android.SpotifyApi;
@@ -27,14 +32,18 @@ import retrofit.RetrofitError;
 import retrofit.client.Response;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ArtistAdapter.OnItemClicked {
 
     public static String URL_SPOTIFY_ENDPOINT = "https://api.spotify.com/v1/search?type=artist&q=*%s*";
 
     RecyclerView.LayoutManager mLayoutManager;
     RecyclerView albumList;
 
+    ProgressBar loading;
+
     SearchSpotifyTask task = new SearchSpotifyTask();
+
+    List<Artist> artists = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,10 +51,11 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         //Set up toolbar
-        Toolbar mToolbar = (Toolbar) findViewById(R.id.pop_toolbar);
+        Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
 
         albumList = (RecyclerView) findViewById(R.id.album_list);
+        loading = (ProgressBar) findViewById(R.id.progressBar);
 
         final EditText artistName = (EditText) findViewById(R.id.artist_name);
         artistName.addTextChangedListener(new TextWatcher() {
@@ -65,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
                     if(task != null)
                         task.cancel(true);
 
+                    showLoading();
                     task = new SearchSpotifyTask();
                     task.execute(artistName.getText().toString());
                 }
@@ -79,31 +90,34 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-
-        return true;
+    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
+        outState.putSerializable("teste", (ArrayList) artists);
+        super.onSaveInstanceState(outState, outPersistentState);
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
+        artists = (List<Artist>) savedInstanceState.getSerializable("teste");
+    }
 
-        return super.onOptionsItemSelected(item);
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        showLoading();
+        populateList();
     }
 
     private class SearchSpotifyTask extends AsyncTask<String, Void, Void> {
         @Override
         protected Void doInBackground(String... artist) {
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                Log.i("SearchSpotifyTask", e.getMessage());
+            }
 
             SpotifyApi api = new SpotifyApi();
 
@@ -111,18 +125,16 @@ public class MainActivity extends AppCompatActivity {
             spotify.searchArtists(artist[0], new Callback<ArtistsPager>() {
                 @Override
                 public void success(ArtistsPager artistsPager, Response response) {
-                    final List<Artist> artists = artistsPager.artists.items;
+                    artists = artistsPager.artists.items;
 
-                    if(artistsPager.artists.items != null) {
+                    if(!isCancelled() && artistsPager.artists.items != null) {
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
                                 MainActivity.this.runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        for(Artist a : artists)
-                                            Log.i("DEBUG", a.name);
-                                        populateList(artists);
+                                        populateList();
                                     }
                                 });
                             }
@@ -141,8 +153,33 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void populateList(List<Artist> artists){
-        AlbumAdapter adapter = new AlbumAdapter(this, artists);
-        albumList.setAdapter(adapter);
+    public void populateList(){
+        if(artists != null) {
+            ArtistAdapter adapter = new ArtistAdapter(this, artists, this);
+            albumList.setAdapter(adapter);
+        }
+        hideLoading();
+    }
+
+    public void showLoading(){
+        loading.setVisibility(View.VISIBLE);
+        albumList.setVisibility(View.GONE);
+    }
+
+    public void hideLoading(){
+        loading.setVisibility(View.GONE);
+        albumList.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void onClicked(Artist item) {
+        Bundle bnd = new Bundle();
+        bnd.putString(TopTenActivity.BUNDLE_ARTIST_ID, item.id);
+        bnd.putString(TopTenActivity.BUNDLE_ARTIST_NAME, item.name);
+
+        Intent intent = new Intent(this, TopTenActivity.class);
+        intent.putExtras(bnd);
+
+        startActivity(intent);
     }
 }

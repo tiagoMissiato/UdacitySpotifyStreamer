@@ -19,6 +19,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".TopTenActivity"
+            android:label="@string/title_activity_top_ten"
+            android:configChanges="orientation">
+        </activity>
     </application>
 
 </manifest>
