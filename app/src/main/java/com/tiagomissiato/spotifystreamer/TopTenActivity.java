@@ -1,5 +1,6 @@
 package com.tiagomissiato.spotifystreamer;
 
+import android.os.PersistableBundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -36,6 +37,7 @@ import retrofit.client.Response;
 
 public class TopTenActivity extends AppCompatActivity implements ArtistTopTrackAdapter.OnItemClicked {
 
+    public static String SAVEINSTANCE_LIST = "artist.list.track";
     public static String BUNDLE_ARTIST_ID = "top.ten.artist.id";
     public static String BUNDLE_ARTIST_NAME = "top.ten.artist.name";
 
@@ -59,7 +61,6 @@ public class TopTenActivity extends AppCompatActivity implements ArtistTopTrackA
         if(extra != null){
             artistId = extra.getString(BUNDLE_ARTIST_ID);
             artistName = extra.getString(BUNDLE_ARTIST_NAME);
-            Toast.makeText(this, artistId, Toast.LENGTH_SHORT).show();
         }
 
         trackList = (RecyclerView) findViewById(R.id.album_list);
@@ -93,10 +94,30 @@ public class TopTenActivity extends AppCompatActivity implements ArtistTopTrackA
     }
 
     @Override
+    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
+        outState.putSerializable(SAVEINSTANCE_LIST, (ArrayList) topTracks);
+        super.onSaveInstanceState(outState, outPersistentState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+        topTracks = (List<Track>) savedInstanceState.getSerializable(SAVEINSTANCE_LIST);
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
 
         showLoading();
+        if(topTracks == null || topTracks.size() <= 0)
+            searchTopTenTracks();
+        else
+            populateList();
+    }
+
+    private void searchTopTenTracks() {
         SpotifyApi api = new SpotifyApi();
 
         HashMap<String, Object> parameter = new HashMap<>();

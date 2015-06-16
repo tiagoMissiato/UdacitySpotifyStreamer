@@ -21,8 +21,7 @@
         </activity>
         <activity
             android:name=".TopTenActivity"
-            android:label="@string/title_activity_top_ten"
-            android:configChanges="orientation">
+            android:label="@string/title_activity_top_ten">
         </activity>
     </application>
 
