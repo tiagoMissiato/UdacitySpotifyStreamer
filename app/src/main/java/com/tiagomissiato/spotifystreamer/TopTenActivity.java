@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -41,6 +42,8 @@ public class TopTenActivity extends AppCompatActivity implements ArtistTopTrackA
     RecyclerView.LayoutManager mLayoutManager;
     RecyclerView trackList;
 
+    LinearLayout noResult;
+
     String artistId;
     String artistName;
 
@@ -61,6 +64,7 @@ public class TopTenActivity extends AppCompatActivity implements ArtistTopTrackA
 
         trackList = (RecyclerView) findViewById(R.id.album_list);
         loading = (ProgressBar) findViewById(R.id.progressBar);
+        noResult = (LinearLayout) findViewById(R.id.no_result);
 
         mLayoutManager = new LinearLayoutManager(this);
         trackList.setLayoutManager(mLayoutManager);
@@ -72,7 +76,7 @@ public class TopTenActivity extends AppCompatActivity implements ArtistTopTrackA
     }
 
     private void setUpToolbar() {
-        Toolbar mToolbar = (Toolbar) findViewById(R.id.pop_toolbar);
+        Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
         mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
@@ -136,18 +140,34 @@ public class TopTenActivity extends AppCompatActivity implements ArtistTopTrackA
 
     public void populateList(){
         if(topTracks != null) {
-            ArtistTopTrackAdapter adapter = new ArtistTopTrackAdapter(this, topTracks, this);
-            trackList.setAdapter(adapter);
+            if(topTracks.size() > 0) {
+                ArtistTopTrackAdapter adapter = new ArtistTopTrackAdapter(this, topTracks, this);
+                trackList.setAdapter(adapter);
+                hideLoading();
+            } else {
+                showNoResult();
+            }
+
+        } else {
+            showNoResult();
         }
-        hideLoading();
     }
+
+    private void showNoResult() {
+        noResult.setVisibility(View.VISIBLE);
+        loading.setVisibility(View.GONE);
+        trackList.setVisibility(View.GONE);
+    }
+
     public void showLoading(){
         loading.setVisibility(View.VISIBLE);
         trackList.setVisibility(View.GONE);
+        noResult.setVisibility(View.GONE);
     }
 
     public void hideLoading(){
         loading.setVisibility(View.GONE);
+        noResult.setVisibility(View.GONE);
         trackList.setVisibility(View.VISIBLE);
     }
 

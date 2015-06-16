@@ -16,6 +16,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 
 import com.tiagomissiato.spotifystreamer.adapter.ArtistAdapter;
@@ -35,9 +36,13 @@ import retrofit.client.Response;
 public class MainActivity extends AppCompatActivity implements ArtistAdapter.OnItemClicked {
 
     public static String URL_SPOTIFY_ENDPOINT = "https://api.spotify.com/v1/search?type=artist&q=*%s*";
+    public static String SAVEINSTANCE_LIST = "artist.list";
+    public static String SAVEINSTANCE_SAD_FACE = "artist.sad.face";
 
     RecyclerView.LayoutManager mLayoutManager;
     RecyclerView albumList;
+
+    LinearLayout noResult;
 
     ProgressBar loading;
 
@@ -45,6 +50,7 @@ public class MainActivity extends AppCompatActivity implements ArtistAdapter.OnI
 
     List<Artist> artists = new ArrayList<>();
 
+    boolean mShowSadFace = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -56,6 +62,7 @@ public class MainActivity extends AppCompatActivity implements ArtistAdapter.OnI
 
         albumList = (RecyclerView) findViewById(R.id.album_list);
         loading = (ProgressBar) findViewById(R.id.progressBar);
+        noResult = (LinearLayout) findViewById(R.id.no_result);
 
         final EditText artistName = (EditText) findViewById(R.id.artist_name);
         artistName.addTextChangedListener(new TextWatcher() {
@@ -91,7 +98,8 @@ public class MainActivity extends AppCompatActivity implements ArtistAdapter.OnI
 
     @Override
     public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
-        outState.putSerializable("teste", (ArrayList) artists);
+        outState.putSerializable(SAVEINSTANCE_LIST, (ArrayList) artists);
+        outState.putBoolean(SAVEINSTANCE_SAD_FACE, mShowSadFace);
         super.onSaveInstanceState(outState, outPersistentState);
     }
 
@@ -99,7 +107,8 @@ public class MainActivity extends AppCompatActivity implements ArtistAdapter.OnI
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
 
-        artists = (List<Artist>) savedInstanceState.getSerializable("teste");
+        artists = (List<Artist>) savedInstanceState.getSerializable(SAVEINSTANCE_LIST);
+        mShowSadFace = savedInstanceState.getBoolean(SAVEINSTANCE_SAD_FACE, false);
     }
 
     @Override
@@ -134,6 +143,7 @@ public class MainActivity extends AppCompatActivity implements ArtistAdapter.OnI
                                 MainActivity.this.runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
+                                        mShowSadFace = true;
                                         populateList();
                                     }
                                 });
@@ -155,19 +165,34 @@ public class MainActivity extends AppCompatActivity implements ArtistAdapter.OnI
 
     public void populateList(){
         if(artists != null) {
-            ArtistAdapter adapter = new ArtistAdapter(this, artists, this);
-            albumList.setAdapter(adapter);
+            if(artists.size() > 0) {
+                ArtistAdapter adapter = new ArtistAdapter(this, artists, this);
+                albumList.setAdapter(adapter);
+                hideLoading();
+            } else {
+                showNoResult();
+            }
+        } else {
+            showNoResult();
         }
-        hideLoading();
+    }
+
+    private void showNoResult() {
+        if(mShowSadFace)
+            noResult.setVisibility(View.VISIBLE);
+        loading.setVisibility(View.GONE);
+        albumList.setVisibility(View.GONE);
     }
 
     public void showLoading(){
         loading.setVisibility(View.VISIBLE);
         albumList.setVisibility(View.GONE);
+        noResult.setVisibility(View.GONE);
     }
 
     public void hideLoading(){
         loading.setVisibility(View.GONE);
+        noResult.setVisibility(View.GONE);
         albumList.setVisibility(View.VISIBLE);
     }
 
