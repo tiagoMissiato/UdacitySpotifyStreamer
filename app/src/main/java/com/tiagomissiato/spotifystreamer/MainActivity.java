@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.PersistableBundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -38,6 +39,7 @@ public class MainActivity extends AppCompatActivity implements ArtistAdapter.OnI
     public static String URL_SPOTIFY_ENDPOINT = "https://api.spotify.com/v1/search?type=artist&q=*%s*";
     public static String SAVEINSTANCE_LIST = "artist.list";
     public static String SAVEINSTANCE_SAD_FACE = "artist.sad.face";
+    public static String SAVEINSTANCE_FROM_INSTANCE = "artist.from.instance";
 
     RecyclerView.LayoutManager mLayoutManager;
     RecyclerView albumList;
@@ -45,12 +47,14 @@ public class MainActivity extends AppCompatActivity implements ArtistAdapter.OnI
     LinearLayout noResult;
 
     ProgressBar loading;
+    EditText artistName;
 
     SearchSpotifyTask task = new SearchSpotifyTask();
 
     List<Artist> artists = new ArrayList<>();
+    List<com.tiagomissiato.spotifystreamer.model.Artist> artistsTest = new ArrayList<>();
 
-    boolean mShowSadFace = false;
+    boolean mShowSadFace, mFromInstance = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,7 +68,40 @@ public class MainActivity extends AppCompatActivity implements ArtistAdapter.OnI
         loading = (ProgressBar) findViewById(R.id.progressBar);
         noResult = (LinearLayout) findViewById(R.id.no_result);
 
-        final EditText artistName = (EditText) findViewById(R.id.artist_name);
+        artistName = (EditText) findViewById(R.id.artist_name);
+
+        mLayoutManager = new LinearLayoutManager(this);
+        albumList.setLayoutManager(mLayoutManager);
+        albumList.setHasFixedSize(true);
+        albumList.setItemAnimator(new DefaultItemAnimator());
+
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putSerializable(SAVEINSTANCE_LIST, (ArrayList<com.tiagomissiato.spotifystreamer.model.Artist>) artistsTest);
+        outState.putBoolean(SAVEINSTANCE_SAD_FACE, mShowSadFace);
+        outState.putBoolean(SAVEINSTANCE_FROM_INSTANCE, true);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+        artistsTest = (List<com.tiagomissiato.spotifystreamer.model.Artist>) savedInstanceState.getSerializable(SAVEINSTANCE_LIST);
+        mShowSadFace = savedInstanceState.getBoolean(SAVEINSTANCE_SAD_FACE, false);
+        mFromInstance = savedInstanceState.getBoolean(SAVEINSTANCE_FROM_INSTANCE, false);
+        Log.i("DEBUG", "onRestoreInstanceState");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        showLoading();
+        populateList();
+
         artistName.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -78,45 +115,17 @@ public class MainActivity extends AppCompatActivity implements ArtistAdapter.OnI
 
             @Override
             public void afterTextChanged(Editable editable) {
-                if(artistName.getText().toString().length() >= 3) {
-                    if(task != null)
+                if (artistName.getText().toString().length() >= 3) {
+                    if (task != null)
                         task.cancel(true);
 
                     showLoading();
                     task = new SearchSpotifyTask();
                     task.execute(artistName.getText().toString());
                 }
+                mFromInstance = false;
             }
         });
-
-        mLayoutManager = new LinearLayoutManager(this);
-        albumList.setLayoutManager(mLayoutManager);
-        albumList.setHasFixedSize(true);
-        albumList.setItemAnimator(new DefaultItemAnimator());
-
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
-        outState.putSerializable(SAVEINSTANCE_LIST, (ArrayList) artists);
-        outState.putBoolean(SAVEINSTANCE_SAD_FACE, mShowSadFace);
-        super.onSaveInstanceState(outState, outPersistentState);
-    }
-
-    @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-
-        artists = (List<Artist>) savedInstanceState.getSerializable(SAVEINSTANCE_LIST);
-        mShowSadFace = savedInstanceState.getBoolean(SAVEINSTANCE_SAD_FACE, false);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        showLoading();
-        populateList();
     }
 
     private class SearchSpotifyTask extends AsyncTask<String, Void, Void> {
@@ -136,7 +145,10 @@ public class MainActivity extends AppCompatActivity implements ArtistAdapter.OnI
                 public void success(ArtistsPager artistsPager, Response response) {
                     artists = artistsPager.artists.items;
 
-                    if(!isCancelled() && artistsPager.artists.items != null) {
+                    for (Artist spotifyArtist : artists)
+                        artistsTest.add(new com.tiagomissiato.spotifystreamer.model.Artist(spotifyArtist));
+
+                    if (!isCancelled() && artistsPager.artists.items != null) {
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
@@ -164,9 +176,9 @@ public class MainActivity extends AppCompatActivity implements ArtistAdapter.OnI
     }
 
     public void populateList(){
-        if(artists != null) {
-            if(artists.size() > 0) {
-                ArtistAdapter adapter = new ArtistAdapter(this, artists, this);
+        if(artistsTest != null) {
+            if(artistsTest.size() > 0) {
+                ArtistAdapter adapter = new ArtistAdapter(this, artistsTest, this);
                 albumList.setAdapter(adapter);
                 hideLoading();
             } else {
@@ -197,7 +209,7 @@ public class MainActivity extends AppCompatActivity implements ArtistAdapter.OnI
     }
 
     @Override
-    public void onClicked(Artist item) {
+    public void onClicked(com.tiagomissiato.spotifystreamer.model.Artist item) {
         Bundle bnd = new Bundle();
         bnd.putString(TopTenActivity.BUNDLE_ARTIST_ID, item.id);
         bnd.putString(TopTenActivity.BUNDLE_ARTIST_NAME, item.name);

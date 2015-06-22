@@ -2,7 +2,6 @@ package com.tiagomissiato.spotifystreamer.adapter;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,12 +11,9 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.tiagomissiato.spotifystreamer.R;
+import com.tiagomissiato.spotifystreamer.model.Track;
 
 import java.util.List;
-
-import kaaes.spotify.webapi.android.models.Artist;
-import kaaes.spotify.webapi.android.models.Image;
-import kaaes.spotify.webapi.android.models.Track;
 
 /**
  * Created by trigoleto on 11/27/14.
@@ -26,7 +22,7 @@ public class ArtistTopTrackAdapter extends RecyclerView.Adapter<ArtistTopTrackAd
     private static final String TAG = ArtistTopTrackAdapter.class.getSimpleName();
 
     Context mContext;
-    private static List<Track> items;
+    private static List<com.tiagomissiato.spotifystreamer.model.Track> items;
     OnItemClicked onItemClicked;
 
     public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
@@ -53,7 +49,7 @@ public class ArtistTopTrackAdapter extends RecyclerView.Adapter<ArtistTopTrackAd
         }
     }
 
-    public ArtistTopTrackAdapter(Context mContext, List<Track> items, OnItemClicked onItemClicked) {
+    public ArtistTopTrackAdapter(Context mContext, List<com.tiagomissiato.spotifystreamer.model.Track> items, OnItemClicked onItemClicked) {
         ArtistTopTrackAdapter.items = items;
         this.mContext = mContext;
         this.onItemClicked = onItemClicked;
@@ -79,12 +75,12 @@ public class ArtistTopTrackAdapter extends RecyclerView.Adapter<ArtistTopTrackAd
 
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, int position) {
-        Track item = ArtistTopTrackAdapter.items.get(position);
+        com.tiagomissiato.spotifystreamer.model.Track item = ArtistTopTrackAdapter.items.get(position);
 
         viewHolder.albumTitle.setText(item.name);
         viewHolder.albumSubtitle.setText(item.album.name);
         String correctImage = null;
-        for(Image img : item.album.images){
+        for(Track.Image img : item.album.images){
             // put add and sub 5 to compare because in the URL there was some width 199, soh just in case;
             if(img.width >= 295 && img.width <= 305)
                 correctImage = img.url;
@@ -106,6 +102,6 @@ public class ArtistTopTrackAdapter extends RecyclerView.Adapter<ArtistTopTrackAd
     }
 
     public interface OnItemClicked{
-        void onClicked(Track item);
+        void onClicked(com.tiagomissiato.spotifystreamer.model.Track item);
     }
 }

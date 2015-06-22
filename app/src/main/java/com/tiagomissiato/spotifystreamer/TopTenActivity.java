@@ -1,23 +1,19 @@
 package com.tiagomissiato.spotifystreamer;
 
-import android.os.PersistableBundle;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.tiagomissiato.spotifystreamer.adapter.ArtistAdapter;
 import com.tiagomissiato.spotifystreamer.adapter.ArtistTopTrackAdapter;
 
 import java.util.ArrayList;
@@ -26,8 +22,6 @@ import java.util.List;
 
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
-import kaaes.spotify.webapi.android.models.Artist;
-import kaaes.spotify.webapi.android.models.ArtistsPager;
 import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.Tracks;
 import retrofit.Callback;
@@ -50,7 +44,7 @@ public class TopTenActivity extends AppCompatActivity implements ArtistTopTrackA
     String artistName;
 
     ProgressBar loading;
-    List<Track> topTracks = new ArrayList<>();
+    List<com.tiagomissiato.spotifystreamer.model.Track> topTracks = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,20 +88,23 @@ public class TopTenActivity extends AppCompatActivity implements ArtistTopTrackA
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
+    public void onSaveInstanceState(Bundle outState) {
+        Log.i("DEBUG", "onSaveInstanceState");
         outState.putSerializable(SAVEINSTANCE_LIST, (ArrayList) topTracks);
-        super.onSaveInstanceState(outState, outPersistentState);
+        super.onSaveInstanceState(outState);
     }
 
     @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
+        Log.i("DEBUG", "onRestoreInstanceState");
         super.onRestoreInstanceState(savedInstanceState);
 
-        topTracks = (List<Track>) savedInstanceState.getSerializable(SAVEINSTANCE_LIST);
+        topTracks = (List<com.tiagomissiato.spotifystreamer.model.Track>) savedInstanceState.getSerializable(SAVEINSTANCE_LIST);
     }
 
     @Override
     protected void onResume() {
+        Log.i("DEBUG", "onResume");
         super.onResume();
 
         showLoading();
@@ -127,34 +124,27 @@ public class TopTenActivity extends AppCompatActivity implements ArtistTopTrackA
         spotify.getArtistTopTrack(artistId, parameter, new Callback<Tracks>() {
             @Override
             public void success(Tracks tracks, Response response) {
-                topTracks = tracks.tracks;
-                new Thread(new Runnable() {
+                for(Track tk : tracks.tracks){
+                    topTracks.add(new com.tiagomissiato.spotifystreamer.model.Track(tk));
+                }
+
+                TopTenActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        TopTenActivity.this.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                populateList();
-                            }
-                        });
+                        populateList();
                     }
-                }).start();
+                });
             }
 
             @Override
             public void failure(RetrofitError error) {
                 Log.i("DEBUG", error.getMessage());
-                new Thread(new Runnable() {
+                TopTenActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        TopTenActivity.this.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                hideLoading();
-                            }
-                        });
+                        hideLoading();
                     }
-                }).start();
+                });
             }
         });
     }
@@ -193,7 +183,7 @@ public class TopTenActivity extends AppCompatActivity implements ArtistTopTrackA
     }
 
     @Override
-    public void onClicked(Track item) {
+    public void onClicked(com.tiagomissiato.spotifystreamer.model.Track item) {
         Toast.makeText(this, item.name, Toast.LENGTH_SHORT).show();
     }
 }
