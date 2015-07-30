@@ -29,6 +29,7 @@ public class ArtistTopTrackAdapter extends RecyclerView.Adapter<ArtistTopTrackAd
         TextView albumTitle;
         TextView albumSubtitle;
         ImageView albumImage;
+        String imageUrl;
         OnItemClicked onItemClicked;
 
         public ViewHolder(View iteView, OnItemClicked onItemClicked) {
@@ -44,7 +45,7 @@ public class ArtistTopTrackAdapter extends RecyclerView.Adapter<ArtistTopTrackAd
         @Override
         public void onClick(View view) {
             if (onItemClicked != null){
-                onItemClicked.onClicked(items.get(getPosition()));
+                onItemClicked.onClicked(items.get(getPosition()), albumImage, imageUrl);
             }
         }
     }
@@ -87,6 +88,7 @@ public class ArtistTopTrackAdapter extends RecyclerView.Adapter<ArtistTopTrackAd
 
         }
 
+        viewHolder.imageUrl = correctImage;
         if(correctImage != null) {
             Glide.with(mContext).load(correctImage)
                     .placeholder(R.drawable.place_holder)
@@ -102,6 +104,6 @@ public class ArtistTopTrackAdapter extends RecyclerView.Adapter<ArtistTopTrackAd
     }
 
     public interface OnItemClicked{
-        void onClicked(com.tiagomissiato.spotifystreamer.model.Track item);
+        void onClicked(com.tiagomissiato.spotifystreamer.model.Track item, View imageView, String url);
     }
 }

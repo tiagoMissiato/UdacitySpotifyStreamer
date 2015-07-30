@@ -1,15 +1,26 @@
 package com.tiagomissiato.spotifystreamer;
 
+import android.annotation.TargetApi;
+import android.app.ActivityOptions;
+import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityOptionsCompat;
+import android.support.v4.view.ViewCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.transition.ChangeImageTransform;
+import android.transition.Explode;
+import android.transition.Slide;
+import android.transition.TransitionSet;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -50,6 +61,10 @@ public class TopTenActivity extends AppCompatActivity implements ArtistTopTrackA
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_top_ten);
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+            getWindow().setSharedElementExitTransition(new TransitionSet().
+                addTransition(new ChangeImageTransform().addTarget("song_album_image")));
 
         Bundle extra = getIntent().getExtras();
         if(extra != null){
@@ -183,7 +198,22 @@ public class TopTenActivity extends AppCompatActivity implements ArtistTopTrackA
     }
 
     @Override
-    public void onClicked(com.tiagomissiato.spotifystreamer.model.Track item) {
-        Toast.makeText(this, item.name, Toast.LENGTH_SHORT).show();
+    public void onClicked(com.tiagomissiato.spotifystreamer.model.Track item, View image, String url) {
+        Intent playSong = new Intent(this, PlaySongActivity.class);
+        Bundle bnd = new Bundle();
+        bnd.putSerializable(PlaySongActivity.TRACK, item);
+        bnd.putString("TRANSITION_KEY", ViewCompat.getTransitionName(image));
+        bnd.putString("IMAGE_URL", url);
+        playSong.putExtras(bnd);
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            ActivityOptionsCompat options = ActivityOptionsCompat.
+                    makeSceneTransitionAnimation(this, image, "song_album_image");
+
+            startActivity(playSong, options.toBundle());
+//            postponeEnterTransition();
+        } else {
+            startActivity(playSong);
+        }
     }
 }

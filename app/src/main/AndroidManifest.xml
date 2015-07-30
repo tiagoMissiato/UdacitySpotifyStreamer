@@ -21,7 +21,11 @@
         </activity>
         <activity
             android:name=".TopTenActivity"
-            android:label="@string/title_activity_top_ten">
+            android:label="@string/title_activity_top_ten" >
+        </activity>
+        <activity
+            android:name=".PlaySongActivity"
+            android:label="@string/title_activity_play_song" >
         </activity>
     </application>
 
