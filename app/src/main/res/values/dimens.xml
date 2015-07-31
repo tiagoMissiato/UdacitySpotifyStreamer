@@ -7,4 +7,6 @@
     <dimen name="element_space">8dp</dimen>
 
     <dimen name="list_image_size">70dp</dimen>
+
+    <dimen name="play_song_image_size">200dp</dimen>
 </resources>

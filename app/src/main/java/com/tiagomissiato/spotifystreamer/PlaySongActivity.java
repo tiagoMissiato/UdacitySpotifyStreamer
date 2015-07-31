@@ -4,8 +4,12 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.annotation.TargetApi;
 import android.app.SharedElementCallback;
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Debug;
 import android.support.v4.view.ViewCompat;
@@ -16,7 +20,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewTreeObserver;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
@@ -29,16 +35,23 @@ import com.bumptech.glide.request.target.Target;
 import com.tiagomissiato.spotifystreamer.model.Track;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
-public class PlaySongActivity extends AppCompatActivity {
+public class PlaySongActivity extends AppCompatActivity implements View.OnClickListener{
 
     public static String TRACK = "play.song.track";
 
+    LinearLayout imgContainer;
+
     Track mTrack;
     ImageView songImage;
+    Button prev;
+    Button playPause;
+    Button next;
 
     String imageUrl;
+    MediaPlayer mediaPlayer;
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
@@ -47,6 +60,14 @@ public class PlaySongActivity extends AppCompatActivity {
         setContentView(R.layout.activity_play_song);
 
         songImage = (ImageView) findViewById(R.id.song_image);
+        imgContainer = (LinearLayout) findViewById(R.id.image_container);
+
+        prev = (Button) findViewById(R.id.prev);
+        playPause = (Button) findViewById(R.id.play_pause);
+        next = (Button) findViewById(R.id.next);
+        prev.setOnClickListener(this);
+        playPause.setOnClickListener(this);
+        next.setOnClickListener(this);
 
         Bundle extra = getIntent().getExtras();
         if(extra != null) {
@@ -60,46 +81,59 @@ public class PlaySongActivity extends AppCompatActivity {
         songImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                loadBigImage();
+//                loadBigImage();
             }
         });
         setEnterSharedElementCallback(new SharedElementCallback() {
             @Override
             public void onSharedElementEnd(List<String> sharedElementNames, List<View> sharedElements, List<View> sharedElementSnapshots) {
                 super.onSharedElementEnd(sharedElementNames, sharedElements, sharedElementSnapshots);
-//                loadBigImage();
                     Glide.with(PlaySongActivity.this).load(mTrack.album.images.get(0).url)
-                            .diskCacheStrategy(DiskCacheStrategy.ALL)
                             .into(new SimpleTarget<GlideDrawable>() {
                                 @Override
                                 public void onResourceReady(GlideDrawable resource, GlideAnimation<? super GlideDrawable> glideAnimation) {
                                     songImage.setImageDrawable(resource.getCurrent());
-//                                    loadBigImage();
                                 }
                             });
             }
         });
+
+        imgContainer.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+            @Override
+            public boolean onPreDraw() {
+                imgContainer.getViewTreeObserver().removeOnPreDrawListener(this);
+                setupImage();
+                return false;
+            }
+        });
+    }
+
+    public void setupImage(){
+          //Set image half of screen
+        int size = imgContainer.getWidth();
+        LinearLayout.LayoutParams paramsSongImg = (LinearLayout.LayoutParams) songImage.getLayoutParams();
+        paramsSongImg.width = size;
+        paramsSongImg.height = size;
+        songImage.setLayoutParams(paramsSongImg);
+
+        Glide.with(this).load(imageUrl)
+                .placeholder(R.drawable.place_holder)
+                .error(R.drawable.place_holder)
+                .override(size, size)
+                .into(new GlideDrawableImageViewTarget(songImage) {
+                    @Override
+                    public void onResourceReady(GlideDrawable drawable, GlideAnimation anim) {
+                        super.onResourceReady(drawable, anim);
+                        supportStartPostponedEnterTransition();
+                    }
+                });
     }
 
     @Override
     protected void onResume() {
         super.onResume();
 
-        Glide.with(this).load(imageUrl)
-                .placeholder(R.drawable.place_holder)
-                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                .error(R.drawable.place_holder)
-                .override(200, 200)
-//                .into(songImage);
-                .into(new GlideDrawableImageViewTarget(songImage) {
-                    @Override
-                    public void onResourceReady(GlideDrawable drawable, GlideAnimation anim) {
-                        super.onResourceReady(drawable, anim);
-                        supportStartPostponedEnterTransition();
-                        Log.i("DEBUG", "supportStartPostponedEnterTransition");
-//                        loadBigImage();
-                    }
-                });
+
     }
 
     public void loadBigImage(){
@@ -137,5 +171,36 @@ public class PlaySongActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onClick(View view) {
+
+        switch(view.getId()){
+            case R.id.prev:
+                break;
+            case R.id.play_pause:
+                try {
+                    if(mediaPlayer != null && mediaPlayer.isPlaying()){
+                        mediaPlayer.pause();
+                    } else {
+                        if(mediaPlayer == null) {
+                            mediaPlayer = new MediaPlayer();
+                            mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                            mediaPlayer.setDataSource(mTrack.preview_url);
+                            mediaPlayer.prepare(); // might take long! (for buffering, etc)
+                            mediaPlayer.start();
+                        } else {
+                            mediaPlayer.start();
+                        }
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                break;
+            case R.id.next:
+                break;
+        }
+
     }
 }

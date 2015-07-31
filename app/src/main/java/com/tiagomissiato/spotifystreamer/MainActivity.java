@@ -20,6 +20,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 
+import com.bumptech.glide.Glide;
 import com.tiagomissiato.spotifystreamer.adapter.ArtistAdapter;
 
 import java.util.ArrayList;
@@ -74,7 +75,7 @@ public class MainActivity extends AppCompatActivity implements ArtistAdapter.OnI
         albumList.setLayoutManager(mLayoutManager);
         albumList.setHasFixedSize(true);
         albumList.setItemAnimator(new DefaultItemAnimator());
-
+//        Glide.get(this).clearMemory();
     }
 
     @Override
