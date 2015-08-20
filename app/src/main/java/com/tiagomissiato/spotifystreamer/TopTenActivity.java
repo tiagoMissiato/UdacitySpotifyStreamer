@@ -3,6 +3,7 @@ package com.tiagomissiato.spotifystreamer;
 import android.annotation.TargetApi;
 import android.app.ActivityOptions;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -10,6 +11,7 @@ import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.graphics.Palette;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -198,10 +200,24 @@ public class TopTenActivity extends AppCompatActivity implements ArtistTopTrackA
     }
 
     @Override
-    public void onClicked(com.tiagomissiato.spotifystreamer.model.Track item, View image, String url) {
+    public void onClicked(com.tiagomissiato.spotifystreamer.model.Track item, Palette palette, View image, String url) {
         Intent playSong = new Intent(this, PlaySongActivity.class);
+
+        Palette.Swatch swatch = palette.getMutedSwatch();
+
+        HashMap<String, Integer> paletteHash = new HashMap<>();
+        paletteHash.put("vibrant", palette.getVibrantColor(Color.parseColor("#000000")));
+        paletteHash.put("darkVibrant", palette.getDarkVibrantColor(Color.parseColor("#000000")));
+        paletteHash.put("lightVibrant", palette.getLightVibrantColor(Color.parseColor("#000000")));
+        paletteHash.put("muted", palette.getMutedColor(Color.parseColor("#000000")));
+        paletteHash.put("darkMuted", palette.getDarkMutedColor(Color.parseColor("#000000")));
+        paletteHash.put("lightMuted", palette.getLightMutedColor(Color.parseColor("#000000")));
+        paletteHash.put("textColor", swatch.getTitleTextColor());
+
         Bundle bnd = new Bundle();
         bnd.putSerializable(PlaySongActivity.TRACK, item);
+        bnd.putSerializable(PlaySongActivity.PALETTE, paletteHash);
+
         bnd.putString("TRANSITION_KEY", ViewCompat.getTransitionName(image));
         bnd.putString("IMAGE_URL", url);
         playSong.putExtras(bnd);

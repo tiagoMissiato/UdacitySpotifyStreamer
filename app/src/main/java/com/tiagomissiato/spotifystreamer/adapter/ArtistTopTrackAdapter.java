@@ -1,6 +1,9 @@
 package com.tiagomissiato.spotifystreamer.adapter;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
+import android.support.v7.graphics.Palette;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,10 +13,13 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.request.animation.GlideAnimation;
+import com.bumptech.glide.request.target.SimpleTarget;
 import com.tiagomissiato.spotifystreamer.R;
 import com.tiagomissiato.spotifystreamer.model.Track;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created by trigoleto on 11/27/14.
@@ -29,6 +35,7 @@ public class ArtistTopTrackAdapter extends RecyclerView.Adapter<ArtistTopTrackAd
         TextView albumTitle;
         TextView albumSubtitle;
         ImageView albumImage;
+        Palette palette;
         String imageUrl;
         OnItemClicked onItemClicked;
 
@@ -45,7 +52,7 @@ public class ArtistTopTrackAdapter extends RecyclerView.Adapter<ArtistTopTrackAd
         @Override
         public void onClick(View view) {
             if (onItemClicked != null){
-                onItemClicked.onClicked(items.get(getPosition()), albumImage, imageUrl);
+                onItemClicked.onClicked(items.get(getPosition()), palette, albumImage, imageUrl);
             }
         }
     }
@@ -75,7 +82,7 @@ public class ArtistTopTrackAdapter extends RecyclerView.Adapter<ArtistTopTrackAd
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder viewHolder, int position) {
+    public void onBindViewHolder(final ViewHolder viewHolder, int position) {
         com.tiagomissiato.spotifystreamer.model.Track item = ArtistTopTrackAdapter.items.get(position);
 
         viewHolder.albumTitle.setText(item.name);
@@ -91,11 +98,27 @@ public class ArtistTopTrackAdapter extends RecyclerView.Adapter<ArtistTopTrackAd
         viewHolder.imageUrl = correctImage;
         if(correctImage != null) {
             Glide.with(mContext).load(correctImage)
-                    .placeholder(R.drawable.place_holder)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .override(200, 200)
-                    .error(R.drawable.place_holder)
-                    .into(viewHolder.albumImage);
+//                    .placeholder(R.drawable.place_holder)
+//                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+//                    .override(200, 200)
+//                    .error(R.drawable.place_holder)
+                    .asBitmap()
+                    .into(new SimpleTarget<Bitmap>(200, 200) {
+                        @Override
+                        public void onResourceReady(Bitmap bitmap, GlideAnimation anim) {
+                            // Do something with bitmap here.
+                            viewHolder.albumImage.setImageBitmap(bitmap);
+                            viewHolder.palette = Palette.generate(bitmap);
+                        }
+
+                        @Override
+                        public void onLoadFailed(Exception e, Drawable errorDrawable) {
+                            super.onLoadFailed(e, errorDrawable);
+                            viewHolder.albumImage.setImageResource(R.drawable.place_holder);
+                        }
+                    });
+//                    .into(viewHolder.albumImage);
+
         } else {
             Glide.with(mContext).load(R.drawable.place_holder)
                     .override(200, 200)
@@ -104,6 +127,6 @@ public class ArtistTopTrackAdapter extends RecyclerView.Adapter<ArtistTopTrackAd
     }
 
     public interface OnItemClicked{
-        void onClicked(com.tiagomissiato.spotifystreamer.model.Track item, View imageView, String url);
+        void onClicked(com.tiagomissiato.spotifystreamer.model.Track item, Palette palette, View imageView, String url);
     }
 }

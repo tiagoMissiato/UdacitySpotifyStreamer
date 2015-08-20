@@ -146,6 +146,7 @@ public class MainActivity extends AppCompatActivity implements ArtistAdapter.OnI
                 public void success(ArtistsPager artistsPager, Response response) {
                     artists = artistsPager.artists.items;
 
+                    artistsTest = new ArrayList<>();
                     for (Artist spotifyArtist : artists)
                         artistsTest.add(new com.tiagomissiato.spotifystreamer.model.Artist(spotifyArtist));
 

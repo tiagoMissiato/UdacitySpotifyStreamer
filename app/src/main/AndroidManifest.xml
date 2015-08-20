@@ -26,8 +26,10 @@
         </activity>
         <activity
             android:name=".PlaySongActivity"
-            android:label="@string/title_activity_play_song" >
+            android:label="@string/title_activity_play_song"
+            android:theme="@style/TransparentStatusBar">
         </activity>
+
     </application>
 
 </manifest>

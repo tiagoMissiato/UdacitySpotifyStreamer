@@ -11,4 +11,6 @@
     <string name="no_result_artist">Sorry!\nWe couldn\'t find any result\nPlease try again.</string>
     <string name="no_result_track">Sorry!\nWe couldn\'t find any result.</string>
     <string name="title_activity_play_song">PlaySongActivity</string>
+
+    <string name="buffering">buffering…</string>
 </resources>
