@@ -1,33 +1,22 @@
 package com.tiagomissiato.spotifystreamer;
 
-import android.animation.AnimatorSet;
-import android.animation.ObjectAnimator;
 import android.annotation.TargetApi;
 import android.app.SharedElementCallback;
-import android.content.DialogInterface;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.PorterDuff;
-import android.graphics.drawable.ClipDrawable;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.LayerDrawable;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
-import android.os.Debug;
+import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -36,7 +25,6 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -47,14 +35,12 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.drawable.GlideDrawable;
-import com.bumptech.glide.request.FutureTarget;
 import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.GlideDrawableImageViewTarget;
 import com.bumptech.glide.request.target.SimpleTarget;
-import com.bumptech.glide.request.target.Target;
 import com.tiagomissiato.spotifystreamer.model.Track;
+import com.tiagomissiato.spotifystreamer.model.TrackPalette;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -121,13 +107,6 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
 
         divider = findViewById(R.id.divider);
         songInfo = findViewById(R.id.song_info);
-//        vibrant = findViewById(R.id.c_vibrant);
-//        vibrantD = findViewById(R.id.c_vibrant_dark);
-//        vibrantL = findViewById(R.id.c_vibrant_light);
-//        muted = findViewById(R.id.c_muted);
-//        mutedD = findViewById(R.id.c_muted_dark);
-//        mutedL = findViewById(R.id.c_muted_light);
-
 
         prev.setOnClickListener(this);
         playPause.setOnClickListener(this);
@@ -209,8 +188,8 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
                     }
                 });
 
-        if(paletteHash != null)
-            configureColors(paletteHash);
+        if(mTrack.palette != null)
+            configureColors(mTrack.palette);
         else
             setupColors();
     }
@@ -242,6 +221,55 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
                 };
             }
         }.execute();
+    }
+
+    private void configureColors(TrackPalette palette) {
+
+        int[][] states = new int[][] {
+                new int[] { android.R.attr.state_enabled}, // enabled
+                new int[] {-android.R.attr.state_enabled}, // disabled
+                new int[] {-android.R.attr.state_checked}, // unchecked
+                new int[] { android.R.attr.state_pressed}  // pressed
+        };
+
+        int[] colors = new int[] {
+                palette.muted,
+                palette.muted,
+                palette.muted,
+                palette.muted
+        };
+        int[] colorsSeekBar = new int[] {
+                palette.vibrant,
+                palette.vibrant,
+                palette.vibrant,
+                palette.vibrant
+        };
+
+        ColorStateList fabList = new ColorStateList(states, colors);
+        ColorStateList seekBarList = new ColorStateList(states, colorsSeekBar);
+
+        if(isColorDark(palette.muted)){
+            playRs = R.mipmap.ic_play_white;
+            pauseRs = R.mipmap.ic_pause_white;
+        }
+        playPause.setImageResource(playRs);
+
+        ShapeDrawable thumb = new ShapeDrawable(new OvalShape());
+        thumb.getPaint().setColor(palette.vibrant);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            seekBar.setThumbTintList(seekBarList);
+            seekBar.setProgressTintList(seekBarList);
+            buffering.setIndeterminateTintList(seekBarList);
+        }
+
+        playPause.setBackgroundTintList(fabList);
+        playPause.setRippleColor(palette.muted);
+        divider.setBackgroundColor(palette.muted);
+        songInfo.setBackgroundColor(palette.muted);
+
+        songName.setTextColor(palette.textColor);
+        songAlbum.setTextColor(palette.textColor);
     }
 
     private void configureColors(HashMap<String, Integer> palette) {
@@ -295,13 +323,6 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
 
     private void configureColors(Bitmap bitmap) {
         Palette p = Palette.generate(bitmap);
-
-//                    vibrant.setBackgroundColor(p.getVibrantColor(Color.parseColor("#000000")));
-//                    vibrantD.setBackgroundColor(p.getDarkVibrantColor(Color.parseColor("#000000")));
-//                    vibrantL.setBackgroundColor(p.getLightVibrantColor(Color.parseColor("#000000")));
-//                    muted.setBackgroundColor(p.getMutedColor(Color.parseColor("#000000")));
-//                    mutedD.setBackgroundColor(p.getDarkMutedColor(Color.parseColor("#000000")));
-//                    mutedL.setBackgroundColor(p.getLightMutedColor(Color.parseColor("#000000")));
 
         int[][] states = new int[][] {
                 new int[] { android.R.attr.state_enabled}, // enabled
@@ -405,6 +426,7 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
 
         switch(view.getId()){
             case R.id.prev:
+                prev();
                 break;
             case R.id.play_pause:
                 try {
@@ -461,9 +483,46 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
                 }
                 break;
             case R.id.next:
+                next();
                 break;
         }
 
+    }
+
+    private void next(){
+
+        mTrack = mTrack.next;
+
+        reloadTrackInfo();
+    }
+
+    private void prev(){
+        mTrack = mTrack.prev;
+
+        reloadTrackInfo();
+    }
+
+    private void reloadTrackInfo() {
+
+        boolean shouldPlay = mediaPlayer != null && mediaPlayer.isPlaying();
+
+        if (mediaPlayer != null) {
+            mediaPlayer.stop();
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
+
+        imageUrl = mTrack.album.images.get(0).url;
+        setupImage();
+        songName.setText(mTrack.name);
+        songAlbum.setText(mTrack.album.name);
+        durationHandler.removeCallbacks(updateSeekBarTime);
+        seekBar.setProgress(0);
+        songProgress.setText("");
+        songTime.setText("");
+
+        if(shouldPlay)
+            playPause.performClick();
     }
 
     //handler to change seekBarTime

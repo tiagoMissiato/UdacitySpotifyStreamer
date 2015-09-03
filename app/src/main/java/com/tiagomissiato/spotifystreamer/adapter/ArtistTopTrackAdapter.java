@@ -17,6 +17,8 @@ import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.tiagomissiato.spotifystreamer.R;
 import com.tiagomissiato.spotifystreamer.model.Track;
+import com.tiagomissiato.spotifystreamer.model.TrackPalette;
+import com.tiagomissiato.spotifystreamer.model.TrackTree;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -28,7 +30,8 @@ public class ArtistTopTrackAdapter extends RecyclerView.Adapter<ArtistTopTrackAd
     private static final String TAG = ArtistTopTrackAdapter.class.getSimpleName();
 
     Context mContext;
-    private static List<com.tiagomissiato.spotifystreamer.model.Track> items;
+    private static TrackTree items;
+    private int itemsCount;
     OnItemClicked onItemClicked;
 
     public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
@@ -52,20 +55,21 @@ public class ArtistTopTrackAdapter extends RecyclerView.Adapter<ArtistTopTrackAd
         @Override
         public void onClick(View view) {
             if (onItemClicked != null){
-                onItemClicked.onClicked(items.get(getPosition()), palette, albumImage, imageUrl);
+                onItemClicked.onClicked(items.findNode(getPosition()), palette, albumImage, imageUrl);
             }
         }
     }
 
-    public ArtistTopTrackAdapter(Context mContext, List<com.tiagomissiato.spotifystreamer.model.Track> items, OnItemClicked onItemClicked) {
-        ArtistTopTrackAdapter.items = items;
+    public ArtistTopTrackAdapter(Context mContext, TrackTree tree, int size, OnItemClicked onItemClicked) {
+        ArtistTopTrackAdapter.items = tree;
+        this.itemsCount = size;
         this.mContext = mContext;
         this.onItemClicked = onItemClicked;
     }
 
     @Override
     public int getItemCount() {
-        return ArtistTopTrackAdapter.items.size();
+        return itemsCount;
     }
 
 
@@ -82,8 +86,8 @@ public class ArtistTopTrackAdapter extends RecyclerView.Adapter<ArtistTopTrackAd
     }
 
     @Override
-    public void onBindViewHolder(final ViewHolder viewHolder, int position) {
-        com.tiagomissiato.spotifystreamer.model.Track item = ArtistTopTrackAdapter.items.get(position);
+    public void onBindViewHolder(final ViewHolder viewHolder, final int position) {
+        com.tiagomissiato.spotifystreamer.model.Track item = ArtistTopTrackAdapter.items.findNode(position);
 
         viewHolder.albumTitle.setText(item.name);
         viewHolder.albumSubtitle.setText(item.album.name);
@@ -98,10 +102,6 @@ public class ArtistTopTrackAdapter extends RecyclerView.Adapter<ArtistTopTrackAd
         viewHolder.imageUrl = correctImage;
         if(correctImage != null) {
             Glide.with(mContext).load(correctImage)
-//                    .placeholder(R.drawable.place_holder)
-//                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-//                    .override(200, 200)
-//                    .error(R.drawable.place_holder)
                     .asBitmap()
                     .into(new SimpleTarget<Bitmap>(200, 200) {
                         @Override
@@ -109,6 +109,7 @@ public class ArtistTopTrackAdapter extends RecyclerView.Adapter<ArtistTopTrackAd
                             // Do something with bitmap here.
                             viewHolder.albumImage.setImageBitmap(bitmap);
                             viewHolder.palette = Palette.generate(bitmap);
+                            ArtistTopTrackAdapter.items.findNode(position).palette = new TrackPalette(Palette.generate(bitmap));
                         }
 
                         @Override
@@ -117,7 +118,6 @@ public class ArtistTopTrackAdapter extends RecyclerView.Adapter<ArtistTopTrackAd
                             viewHolder.albumImage.setImageResource(R.drawable.place_holder);
                         }
                     });
-//                    .into(viewHolder.albumImage);
 
         } else {
             Glide.with(mContext).load(R.drawable.place_holder)

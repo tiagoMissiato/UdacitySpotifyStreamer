@@ -13,12 +13,17 @@ import kaaes.spotify.webapi.android.models.AlbumSimple;
  */
 public class Track implements Serializable{
 
+    public int pos;
     public String name;
     public Album album;
     public String preview_url;
     public String uri;
+    public TrackPalette palette;
+    public Track prev;
+    public Track next;
 
-    public Track(kaaes.spotify.webapi.android.models.Track track) {
+    public Track(int pos, kaaes.spotify.webapi.android.models.Track track) {
+        this.pos = pos;
         this.name = track.name;
         this.album = new Album(track.album);
         this.preview_url = track.preview_url;

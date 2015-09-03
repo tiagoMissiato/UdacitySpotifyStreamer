@@ -6,63 +6,11 @@
 
     <include layout="@layout/toolbar" android:id="@+id/toolbar"/>
 
-    <android.support.design.widget.TextInputLayout
-        android:id="@+id/search_text_layout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/primary"
-        android:layout_below="@id/toolbar"
-        android:padding="@dimen/element_space">
-
-        <EditText
-            android:id="@+id/artist_name"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/search_hint"
-            android:layout_margin="@dimen/element_space"
-            android:textColor="@android:color/white"/>
-
-    </android.support.design.widget.TextInputLayout>
-
-
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/album_list"
+    <FrameLayout
+        android:id="@+id/search_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clipToPadding="false"
-        android:paddingBottom="@dimen/element_space"
-        android:layout_below="@id/search_text_layout"
-        android:visibility="gone"
+        android:layout_below="@id/toolbar"
         />
-
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyleLarge"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"/>
-
-    <LinearLayout
-        android:id="@+id/no_result"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:layout_centerInParent="true"
-        android:visibility="gone">
-
-        <ImageView
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:src="@drawable/sad_face"/>
-
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/no_result_artist"
-            android:gravity="center"/>
-
-    </LinearLayout>
 
 </RelativeLayout>
