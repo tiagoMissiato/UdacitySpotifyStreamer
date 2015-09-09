@@ -16,6 +16,7 @@ import com.tiagomissiato.spotifystreamer.R;
 import java.util.List;
 
 import com.tiagomissiato.spotifystreamer.model.Artist;
+import com.tiagomissiato.spotifystreamer.model.Image;
 
 /**
  * Created by trigoleto on 11/27/14.
@@ -80,7 +81,7 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
 
         viewHolder.albumTitle.setText(item.name);
         String correctImage = null;
-        for(Artist.Image img : item.images){
+        for(Image img : item.images){
             // put add and sub 5 to compare because in the URL there was some width 199, soh just in case;
             if(img.width >= 195 && img.width <= 305)
                 correctImage = img.url;

@@ -9,4 +9,5 @@
     <dimen name="list_image_size">70dp</dimen>
 
     <dimen name="play_song_image_size">200dp</dimen>
+    <dimen name="play_song_dialog_size">450dp</dimen>
 </resources>

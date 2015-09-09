@@ -1,32 +1,38 @@
-package com.tiagomissiato.spotifystreamer;
+package com.tiagomissiato.spotifystreamer.view;
 
-import android.annotation.TargetApi;
-import android.app.SharedElementCallback;
+import android.app.Dialog;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.media.session.MediaSession;
+import android.media.session.MediaSessionManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.view.ViewCompat;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.graphics.Palette;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -35,11 +41,11 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.drawable.GlideDrawable;
 import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.GlideDrawableImageViewTarget;
 import com.bumptech.glide.request.target.SimpleTarget;
+import com.tiagomissiato.spotifystreamer.R;
 import com.tiagomissiato.spotifystreamer.helper.Controls;
 import com.tiagomissiato.spotifystreamer.helper.PlayerConstants;
 import com.tiagomissiato.spotifystreamer.helper.UtilFunctions;
@@ -50,11 +56,13 @@ import com.tiagomissiato.spotifystreamer.service.SongService;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-public class PlaySongActivity extends AppCompatActivity implements View.OnClickListener, UIActionsInterface{
+/**
+ * Created by tiagomissiato on 9/3/15.
+ */
+public class PlaySongDialogFragment extends DialogFragment implements View.OnClickListener, UIActionsInterface {
 
     public static String TRACK = "play.song.track";
     public static String PALETTE = "play.song.palette";
@@ -83,20 +91,26 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
     int pauseRs = R.mipmap.ic_pause;
     int playRs = R.mipmap.ic_play;
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    @Nullable
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_play_song);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.dialog_play_song, container);
 
-        songImage = (ImageView) findViewById(R.id.song_image);
-        imgContainer = (LinearLayout) findViewById(R.id.image_container);
+        Dialog dialog = getDialog();
+        dialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
+        dialog.getWindow().setLayout((int) getResources().getDimension(R.dimen.play_song_dialog_size), ViewGroup.LayoutParams.WRAP_CONTENT);
+        dialog.setCancelable(false);
 
-        prev = (ImageButton) findViewById(R.id.prev);
-        playPause = (FloatingActionButton) findViewById(R.id.play_pause);
-        next = (ImageButton) findViewById(R.id.next);
-        buffering = (ProgressBar) findViewById(R.id.buffering_progress);
-        seekBar = (SeekBar) findViewById(R.id.seekBar);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+        songImage = (ImageView) view.findViewById(R.id.song_image);
+        imgContainer = (LinearLayout) view.findViewById(R.id.image_container);
+
+        prev = (ImageButton) view.findViewById(R.id.prev);
+        playPause = (FloatingActionButton) view.findViewById(R.id.play_pause);
+        next = (ImageButton) view.findViewById(R.id.next);
+        buffering = (ProgressBar) view.findViewById(R.id.buffering_progress);
+        seekBar = (SeekBar) view.findViewById(R.id.seekBar);
         seekBar.setClickable(false);
         seekBar.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -106,42 +120,25 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
         });
         seekBar.setProgress(0);
 
-        songProgress = (TextView) findViewById(R.id.song_progress);
-        songTime = (TextView) findViewById(R.id.song_time);
-        bufferingText = (TextView) findViewById(R.id.buffering);
-        songName = (TextView) findViewById(R.id.song_name);
-        songAlbum = (TextView) findViewById(R.id.song_album);
+        songProgress = (TextView) view.findViewById(R.id.song_progress);
+        songTime = (TextView) view.findViewById(R.id.song_time);
+        bufferingText = (TextView) view.findViewById(R.id.buffering);
+        songName = (TextView) view.findViewById(R.id.song_name);
+        songAlbum = (TextView) view.findViewById(R.id.song_album);
 
-        divider = findViewById(R.id.divider);
-        songInfo = findViewById(R.id.song_info);
+        divider = view.findViewById(R.id.divider);
+        songInfo = view.findViewById(R.id.song_info);
 
         prev.setOnClickListener(this);
         playPause.setOnClickListener(this);
         next.setOnClickListener(this);
 
-        Bundle extra = getIntent().getExtras();
+        Bundle extra = getArguments();
         if(extra != null) {
             mTrack = (Track) extra.getSerializable(TRACK);
             paletteHash = (HashMap<String, Integer>) extra.getSerializable(PALETTE);
             imageUrl = extra.getString("IMAGE_URL");
             ViewCompat.setTransitionName(songImage, extra.getString("TRANSITION_KEY"));
-        }
-
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            supportPostponeEnterTransition();
-            setEnterSharedElementCallback(new SharedElementCallback() {
-                @Override
-                public void onSharedElementEnd(List<String> sharedElementNames, List<View> sharedElements, List<View> sharedElementSnapshots) {
-                    super.onSharedElementEnd(sharedElementNames, sharedElements, sharedElementSnapshots);
-                    Glide.with(PlaySongActivity.this).load(UtilFunctions.getBigImageUrl(mTrack.album.images))
-                            .into(new SimpleTarget<GlideDrawable>() {
-                                @Override
-                                public void onResourceReady(GlideDrawable resource, GlideAnimation<? super GlideDrawable> glideAnimation) {
-                                    songImage.setImageDrawable(resource.getCurrent());
-                                }
-                            });
-                }
-            });
         }
 
         imgContainer.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
@@ -153,48 +150,40 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
             }
         });
 
-        setupToolbar();
-
         songName.setText(mTrack.name);
         songAlbum.setText(mTrack.album.name);
 
-    }
+//        Notification noti = new Notification.Builder()
+//                .setSmallIcon(R.drawable.ic_stat_player)
+//                .setContentTitle("Track title")
+//                .setContentText("Artist - Album")
+//                .setLargeIcon(albumArtBitmap))
+//        .setStyle(new Notification.MediaStyle()
+//                .setMediaSession(mySession))
+//                .build();
 
-    private void setupToolbar() {
-        //Set up toolbar
-        Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(mToolbar);
-
-        ActionBar actionBar = getSupportActionBar();
-
-        if(actionBar != null) {
-            actionBar.setTitle("");
-            actionBar.setDisplayShowHomeEnabled(true);
-            actionBar.setDisplayHomeAsUpEnabled(true);
-        }
-
-        mToolbar.setPadding(0, getStatusBarHeight(), 0, 0);
+        return view;
     }
 
     public void setupImage(){
-          //Set image half of screen
+        //Set image half of screen
         int size = imgContainer.getWidth();
         LinearLayout.LayoutParams paramsSongImg = (LinearLayout.LayoutParams) songImage.getLayoutParams();
         paramsSongImg.width = size;
         paramsSongImg.height = size;
         songImage.setLayoutParams(paramsSongImg);
 
-        Glide.with(this).load(imageUrl)
+        Glide.with(this).load(UtilFunctions.getBigImageUrl(mTrack.album.images))
+                .asBitmap()
                 .placeholder(R.drawable.place_holder)
                 .error(R.drawable.place_holder)
-                .override(size, size)
-                .into(new GlideDrawableImageViewTarget(songImage) {
-                    @Override
-                    public void onResourceReady(GlideDrawable drawable, GlideAnimation anim) {
-                        super.onResourceReady(drawable, anim);
-                        supportStartPostponedEnterTransition();
-                    }
-                });
+                .into(new SimpleTarget<Bitmap>(200, 200) {
+                          @Override
+                          public void onResourceReady(Bitmap bitmap, GlideAnimation anim) {
+                              songImage.setImageBitmap(bitmap);
+                          }
+                      }
+                );
 
         if(mTrack.palette != null)
             configureColors(mTrack.palette);
@@ -211,7 +200,7 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
             protected Void doInBackground(Void... params) {
                 try {
                     bitmap = Glide.
-                            with(PlaySongActivity.this).
+                            with(getActivity()).
                             load(imageUrl).
                             asBitmap().
                             into(-1,-1).
@@ -229,104 +218,6 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
                 };
             }
         }.execute();
-    }
-
-    private void configureColors(TrackPalette palette) {
-
-        int[][] states = new int[][] {
-                new int[] { android.R.attr.state_enabled}, // enabled
-                new int[] {-android.R.attr.state_enabled}, // disabled
-                new int[] {-android.R.attr.state_checked}, // unchecked
-                new int[] { android.R.attr.state_pressed}  // pressed
-        };
-
-        int[] colors = new int[] {
-                palette.muted,
-                palette.muted,
-                palette.muted,
-                palette.muted
-        };
-        int[] colorsSeekBar = new int[] {
-                palette.vibrant,
-                palette.vibrant,
-                palette.vibrant,
-                palette.vibrant
-        };
-
-        ColorStateList fabList = new ColorStateList(states, colors);
-        ColorStateList seekBarList = new ColorStateList(states, colorsSeekBar);
-
-        if(isColorDark(palette.muted)){
-            playRs = R.mipmap.ic_play_white;
-            pauseRs = R.mipmap.ic_pause_white;
-        }
-        playPause.setImageResource(playRs);
-
-        ShapeDrawable thumb = new ShapeDrawable(new OvalShape());
-        thumb.getPaint().setColor(palette.vibrant);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            seekBar.setThumbTintList(seekBarList);
-            seekBar.setProgressTintList(seekBarList);
-            buffering.setIndeterminateTintList(seekBarList);
-        }
-
-        playPause.setBackgroundTintList(fabList);
-        playPause.setRippleColor(palette.muted);
-        divider.setBackgroundColor(palette.muted);
-        songInfo.setBackgroundColor(palette.muted);
-
-        songName.setTextColor(palette.textColor);
-        songAlbum.setTextColor(palette.textColor);
-    }
-
-    private void configureColors(HashMap<String, Integer> palette) {
-
-        int[][] states = new int[][] {
-                new int[] { android.R.attr.state_enabled}, // enabled
-                new int[] {-android.R.attr.state_enabled}, // disabled
-                new int[] {-android.R.attr.state_checked}, // unchecked
-                new int[] { android.R.attr.state_pressed}  // pressed
-        };
-
-        int[] colors = new int[] {
-                palette.get("muted"),
-                palette.get("muted"),
-                palette.get("muted"),
-                palette.get("muted")
-        };
-        int[] colorsSeekBar = new int[] {
-                palette.get("vibrant"),
-                palette.get("vibrant"),
-                palette.get("vibrant"),
-                palette.get("vibrant")
-        };
-
-        ColorStateList fabList = new ColorStateList(states, colors);
-        ColorStateList seekBarList = new ColorStateList(states, colorsSeekBar);
-
-        if(isColorDark(palette.get("muted"))){
-            playRs = R.mipmap.ic_play_white;
-            pauseRs = R.mipmap.ic_pause_white;
-        }
-        playPause.setImageResource(playRs);
-
-        ShapeDrawable thumb = new ShapeDrawable(new OvalShape());
-        thumb.getPaint().setColor(palette.get("vibrant"));
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            seekBar.setThumbTintList(seekBarList);
-            seekBar.setProgressTintList(seekBarList);
-            buffering.setIndeterminateTintList(seekBarList);
-        }
-
-        playPause.setBackgroundTintList(fabList);
-        playPause.setRippleColor(palette.get("muted"));
-        divider.setBackgroundColor(palette.get("muted"));
-        songInfo.setBackgroundColor(palette.get("muted"));
-
-        songName.setTextColor(palette.get("textColor"));
-        songAlbum.setTextColor(palette.get("textColor"));
     }
 
     private void configureColors(Bitmap bitmap) {
@@ -380,53 +271,53 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
         songAlbum.setTextColor(swatch.getTitleTextColor());
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-    }
+    private void configureColors(TrackPalette palette) {
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if(mediaPlayer != null)
-            mediaPlayer.stop();
-    }
+        int[][] states = new int[][] {
+                new int[] { android.R.attr.state_enabled}, // enabled
+                new int[] {-android.R.attr.state_enabled}, // disabled
+                new int[] {-android.R.attr.state_checked}, // unchecked
+                new int[] { android.R.attr.state_pressed}  // pressed
+        };
 
-    public void loadBigImage(){
-        Log.i("DEBUG", "loadBigImage");
-        Glide.with(this).load(mTrack.album.images.get(0).url)
-                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                .into(new GlideDrawableImageViewTarget(songImage) {
-                    @Override
-                    public void onResourceReady(GlideDrawable drawable, GlideAnimation anim) {
-                        super.onResourceReady(drawable, anim);
-//                        loadBigImage();
-                    }
-                });
-    }
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_play_song, menu);
-        return true;
-    }
+        int[] colors = new int[] {
+                palette.muted,
+                palette.muted,
+                palette.muted,
+                palette.muted
+        };
+        int[] colorsSeekBar = new int[] {
+                palette.vibrant,
+                palette.vibrant,
+                palette.vibrant,
+                palette.vibrant
+        };
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+        ColorStateList fabList = new ColorStateList(states, colors);
+        ColorStateList seekBarList = new ColorStateList(states, colorsSeekBar);
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        } else if (id == android.R.id.home){
-            supportFinishAfterTransition();
-            return true;
+        if(isColorDark(palette.muted)){
+            playRs = R.mipmap.ic_play_white;
+            pauseRs = R.mipmap.ic_pause_white;
+        }
+        playPause.setImageResource(playRs);
+
+        ShapeDrawable thumb = new ShapeDrawable(new OvalShape());
+        thumb.getPaint().setColor(palette.vibrant);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            seekBar.setThumbTintList(seekBarList);
+            seekBar.setProgressTintList(seekBarList);
+            buffering.setIndeterminateTintList(seekBarList);
         }
 
-        return super.onOptionsItemSelected(item);
+        playPause.setBackgroundTintList(fabList);
+        playPause.setRippleColor(palette.muted);
+        divider.setBackgroundColor(palette.muted);
+        songInfo.setBackgroundColor(palette.muted);
+
+        songName.setTextColor(palette.textColor);
+        songAlbum.setTextColor(palette.textColor);
     }
 
     @Override
@@ -437,7 +328,8 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
                 prev();
                 break;
             case R.id.play_pause:
-                boolean isServiceRunning = UtilFunctions.isServiceRunning(SongService.class.getName(), this);
+
+                boolean isServiceRunning = UtilFunctions.isServiceRunning(SongService.class.getName(), getActivity());
                 if (!isServiceRunning) {
                     PlayerConstants.UI_CONTROL_LISTENER = this;
                     PlayerConstants.PROGRESSBAR_HANDLER = new Handler(){
@@ -452,16 +344,16 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
 
                     PlayerConstants.SONG_PAUSED = false;
                     PlayerConstants.SONG_NUMBER = mTrack.pos;
-                    Intent i = new Intent(this,SongService.class);
-                    startService(i);
-//                    playPause.setImageResource(pauseRs);
+                    Intent i = new Intent(getActivity(),SongService.class);
+                    getActivity().startService(i);
+                    playPause.setImageResource(pauseRs);
                 } else {
                     if(!PlayerConstants.SONG_PAUSED){
-                        Controls.pauseControl(this);
-//                        playPause.setImageResource(playRs);
+                        Controls.pauseControl(getActivity());
+                        playPause.setImageResource(playRs);
                     }else{
-                        Controls.playControl(this);
-//                        playPause.setImageResource(pauseRs);
+                        Controls.playControl(getActivity());
+                        playPause.setImageResource(pauseRs);
                     }
                 }
 //                try {
@@ -525,14 +417,14 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
     }
 
     private void next(){
-        Controls.nextControl(this);
+        Controls.nextControl(getActivity());
         mTrack = mTrack.next;
 
         reloadTrackInfo();
     }
 
     private void prev() {
-        Controls.previousControl(this);
+        Controls.previousControl(getActivity());
         mTrack = mTrack.prev;
         reloadTrackInfo();
     }
@@ -547,7 +439,7 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
 //            mediaPlayer = null;
 //        }
 
-        imageUrl = UtilFunctions.getBigImageUrl(mTrack.album.images);
+        imageUrl = mTrack.album.images.get(0).url;
         setupImage();
         songName.setText(mTrack.name);
         songAlbum.setText(mTrack.album.name);
@@ -555,7 +447,6 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
         seekBar.setProgress(0);
         songProgress.setText("");
         songTime.setText("");
-        playPause.setImageResource(pauseRs);
 
 //        if(shouldPlay)
 //            playPause.performClick();
@@ -575,15 +466,6 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
             durationHandler.postDelayed(this, 100);
         }
     };
-
-    public int getStatusBarHeight() {
-        int result = 0;
-        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
-        if (resourceId > 0) {
-            result = getResources().getDimensionPixelSize(resourceId);
-        }
-        return result;
-    }
 
     public boolean isColorDark(int color){
         double darkness = 1-(0.299*Color.red(color) + 0.587*Color.green(color) + 0.114*Color.blue(color))/255;
@@ -631,6 +513,4 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
             playPause.setImageResource(pauseRs);
         }
     }
-
-
 }

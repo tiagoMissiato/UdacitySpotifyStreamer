@@ -31,6 +31,6 @@ public class TrackPalette implements Serializable{
         if(swatch != null)
             this.textColor = swatch.getTitleTextColor();
         else
-            this.textColor = Color.parseColor("#000000");
+            this.textColor = Color.parseColor("#FFFFFF");
     }
 }

@@ -54,6 +54,8 @@ public class SearchFragment extends Fragment implements ArtistAdapter.OnItemClic
     ProgressBar loading;
     EditText artistName;
 
+    ArtistAdapter.OnItemClicked twoPaneListener;
+
     SearchSpotifyTask task = new SearchSpotifyTask();
 
     List<Artist> artists = new ArrayList<>();
@@ -188,15 +190,21 @@ public class SearchFragment extends Fragment implements ArtistAdapter.OnItemClic
 
     @Override
     public void onClicked(com.tiagomissiato.spotifystreamer.model.Artist item) {
-        Bundle bnd = new Bundle();
-//        bnd.putString(TopTenActivity.BUNDLE_ARTIST_ID, item.id);
-//        bnd.putString(TopTenActivity.BUNDLE_ARTIST_NAME, item.name);
-        bnd.putSerializable(TopTenFragment.ARTIST, item);
+        if(twoPaneListener != null){
+            twoPaneListener.onClicked(item);
+        } else {
+            Bundle bnd = new Bundle();
+            bnd.putSerializable(TopTenFragment.ARTIST, item);
 
-        Intent intent = new Intent(mActivity, TopTenActivity.class);
-        intent.putExtras(bnd);
+            Intent intent = new Intent(mActivity, TopTenActivity.class);
+            intent.putExtras(bnd);
 
-        startActivity(intent);
+            startActivity(intent);
+        }
+    }
+
+    public void setTwoPaneListener(ArtistAdapter.OnItemClicked twoPaneListener) {
+        this.twoPaneListener = twoPaneListener;
     }
 
     private class SearchSpotifyTask extends AsyncTask<String, Void, Void> {

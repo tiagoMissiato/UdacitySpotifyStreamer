@@ -1,0 +1,17 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+    <include layout="@layout/toolbar" android:id="@+id/toolbar"/>
+
+    <fragment
+        android:id="@+id/search_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:name="com.tiagomissiato.spotifystreamer.fragment.SearchFragment"
+        android:layout_below="@id/toolbar"
+        />
+
+</RelativeLayout>

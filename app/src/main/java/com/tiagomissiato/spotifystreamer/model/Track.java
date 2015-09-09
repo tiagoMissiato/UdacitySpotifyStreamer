@@ -3,7 +3,6 @@ package com.tiagomissiato.spotifystreamer.model;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import kaaes.spotify.webapi.android.models.AlbumSimple;
 
@@ -41,18 +40,6 @@ public class Track implements Serializable{
             for(kaaes.spotify.webapi.android.models.Image img : album.images){
                 images.add(new Image(img));
             }
-        }
-    }
-
-    public class Image implements Serializable{
-        public Integer width;
-        public Integer height;
-        public String url;
-
-        public Image(kaaes.spotify.webapi.android.models.Image img) {
-            this.height = img.height;
-            this.width = img.width;
-            this.url = img.url;
         }
     }
 }

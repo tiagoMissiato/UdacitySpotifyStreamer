@@ -16,6 +16,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.tiagomissiato.spotifystreamer.R;
+import com.tiagomissiato.spotifystreamer.model.Image;
 import com.tiagomissiato.spotifystreamer.model.Track;
 import com.tiagomissiato.spotifystreamer.model.TrackPalette;
 import com.tiagomissiato.spotifystreamer.model.TrackTree;
@@ -92,7 +93,7 @@ public class ArtistTopTrackAdapter extends RecyclerView.Adapter<ArtistTopTrackAd
         viewHolder.albumTitle.setText(item.name);
         viewHolder.albumSubtitle.setText(item.album.name);
         String correctImage = null;
-        for(Track.Image img : item.album.images){
+        for(Image img : item.album.images){
             // put add and sub 5 to compare because in the URL there was some width 199, soh just in case;
             if(img.width >= 295 && img.width <= 305)
                 correctImage = img.url;

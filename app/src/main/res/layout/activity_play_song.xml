@@ -37,6 +37,7 @@
         android:layout_below="@+id/divider"
         android:layout_width="match_parent"
         android:layout_height="100dp"
+        android:layout_above="@+id/progressLayout"
         android:padding="@dimen/element_space"
         >
 
@@ -53,6 +54,7 @@
             android:id="@+id/play_pause"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:padding="5dp"
             android:src="@mipmap/ic_play"
             android:layout_margin="@dimen/element_space"
             android:layout_centerInParent="true"
@@ -84,38 +86,45 @@
 
     </RelativeLayout>
 
-    <SeekBar
-        android:id="@+id/seekBar"
+    <RelativeLayout
+        android:id="@+id/progressLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/play_buttons"
-        />
+        android:orientation="vertical"
+        android:layout_above="@+id/song_info">
 
-    <TextView
-        android:id="@+id/song_progress"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/seekBar"
-        android:layout_marginLeft="@dimen/default_margin"
-        android:layout_alignParentLeft="true"/>
+        <SeekBar
+            android:id="@+id/seekBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            />
 
-    <TextView
-        android:id="@+id/song_time"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/seekBar"
-        android:layout_marginRight="@dimen/default_margin"
-        android:layout_alignParentRight="true"/>
+        <TextView
+            android:id="@+id/song_progress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/seekBar"
+            android:layout_marginLeft="@dimen/default_margin"
+            android:layout_alignParentLeft="true"/>
+
+        <TextView
+            android:id="@+id/song_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/seekBar"
+            android:layout_marginRight="@dimen/default_margin"
+            android:layout_alignParentRight="true"/>
 
 
-    <TextView
-        android:id="@+id/buffering"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/seekBar"
-        android:gravity="center_horizontal"
-        android:text="@string/buffering"
-        android:visibility="gone"/>
+        <TextView
+            android:id="@+id/buffering"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/seekBar"
+            android:gravity="center_horizontal"
+            android:text="@string/buffering"
+            android:visibility="gone"/>
+    </RelativeLayout>
 
     <LinearLayout
         android:id="@+id/song_info"
