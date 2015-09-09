@@ -84,8 +84,6 @@ public class PlaySongDialogFragment extends DialogFragment implements View.OnCli
 
     View divider, songInfo;//, vibrant, vibrantD, vibrantL, muted, mutedD, mutedL;
     String imageUrl;
-    MediaPlayer mediaPlayer;
-    private Handler durationHandler = new Handler();
     HashMap<String, Integer> paletteHash;
 
     int pauseRs = R.mipmap.ic_pause;
@@ -152,16 +150,6 @@ public class PlaySongDialogFragment extends DialogFragment implements View.OnCli
 
         songName.setText(mTrack.name);
         songAlbum.setText(mTrack.album.name);
-
-//        Notification noti = new Notification.Builder()
-//                .setSmallIcon(R.drawable.ic_stat_player)
-//                .setContentTitle("Track title")
-//                .setContentText("Artist - Album")
-//                .setLargeIcon(albumArtBitmap))
-//        .setStyle(new Notification.MediaStyle()
-//                .setMediaSession(mySession))
-//                .build();
-
         return view;
     }
 
@@ -328,7 +316,6 @@ public class PlaySongDialogFragment extends DialogFragment implements View.OnCli
                 prev();
                 break;
             case R.id.play_pause:
-
                 boolean isServiceRunning = UtilFunctions.isServiceRunning(SongService.class.getName(), getActivity());
                 if (!isServiceRunning) {
                     PlayerConstants.UI_CONTROL_LISTENER = this;
@@ -356,58 +343,6 @@ public class PlaySongDialogFragment extends DialogFragment implements View.OnCli
                         playPause.setImageResource(pauseRs);
                     }
                 }
-//                try {
-//                    if(mediaPlayer != null && mediaPlayer.isPlaying()){
-//                        playPause.setImageResource(playRs);
-//                        mediaPlayer.pause();
-//                    } else {
-//                        if(mediaPlayer == null) {
-//                            mediaPlayer = new MediaPlayer();
-//                            mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-//                            mediaPlayer.setDataSource(mTrack.preview_url);
-////                            mediaPlayer.prepare(); // might take long! (for buffering, etc)
-//                            playPause.setClickable(false);
-//                            buffering.setVisibility(View.VISIBLE);
-//                            bufferingText.setVisibility(View.VISIBLE);
-//                            mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-//                                public void onPrepared(MediaPlayer mp) {
-//                                    mediaPlayer.start();
-//                                    playPause.setImageResource(pauseRs);
-//                                    playPause.setClickable(true);
-//                                    buffering.setVisibility(View.GONE);
-//                                    bufferingText.setVisibility(View.GONE);
-//
-//                                    int finalTime = mediaPlayer.getDuration();
-//                                    long min = TimeUnit.MILLISECONDS.toMinutes((long) finalTime);
-//                                    long sec = TimeUnit.MILLISECONDS.toSeconds((long) finalTime);
-//
-//                                    seekBar.setMax(finalTime);
-//                                    seekBar.setClickable(false);
-//
-//                                    mediaPlayer.start();
-//                                    int timeElapsed = mediaPlayer.getCurrentPosition();
-//                                    seekBar.setProgress(timeElapsed);
-//
-//                                    long minP = TimeUnit.MILLISECONDS.toMinutes((long) timeElapsed);
-//                                    long secP = TimeUnit.MILLISECONDS.toSeconds((long) timeElapsed);
-//
-//                                    songProgress.setText(String.format("%02d:%02d", minP, secP));
-//                                    songTime.setText(String.format("%02d:%02d", min, sec));
-//                                    durationHandler.postDelayed(updateSeekBarTime, 100);
-//                                }
-//                            });
-//                            mediaPlayer.prepareAsync();
-//                        } else {
-//                            mediaPlayer.start();
-//                            playPause.setImageResource(pauseRs);
-//                            int timeElapsed = mediaPlayer.getCurrentPosition();
-//                            seekBar.setProgress(timeElapsed);
-//                            durationHandler.postDelayed(updateSeekBarTime, 100);
-//                        }
-//                    }
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
                 break;
             case R.id.next:
                 next();
@@ -431,41 +366,14 @@ public class PlaySongDialogFragment extends DialogFragment implements View.OnCli
 
     private void reloadTrackInfo() {
 
-//        boolean shouldPlay = mediaPlayer != null && mediaPlayer.isPlaying();
-//
-//        if (mediaPlayer != null) {
-//            mediaPlayer.stop();
-//            mediaPlayer.release();
-//            mediaPlayer = null;
-//        }
-
         imageUrl = mTrack.album.images.get(0).url;
         setupImage();
         songName.setText(mTrack.name);
         songAlbum.setText(mTrack.album.name);
-        durationHandler.removeCallbacks(updateSeekBarTime);
         seekBar.setProgress(0);
         songProgress.setText("");
         songTime.setText("");
-
-//        if(shouldPlay)
-//            playPause.performClick();
     }
-
-    //handler to change seekBarTime
-    private Runnable updateSeekBarTime = new Runnable() {
-        public void run() {
-            //get current position
-            int timeElapsed = mediaPlayer.getCurrentPosition();
-
-            long min = TimeUnit.MILLISECONDS.toMinutes((long) timeElapsed);
-            long sec = TimeUnit.MILLISECONDS.toSeconds((long) timeElapsed);
-            songProgress.setText(String.format("%02d:%02d", min, sec));
-
-            seekBar.setProgress(timeElapsed);
-            durationHandler.postDelayed(this, 100);
-        }
-    };
 
     public boolean isColorDark(int color){
         double darkness = 1-(0.299*Color.red(color) + 0.587*Color.green(color) + 0.114*Color.blue(color))/255;
@@ -497,7 +405,6 @@ public class PlaySongDialogFragment extends DialogFragment implements View.OnCli
         setupImage();
         songName.setText(mTrack.name);
         songAlbum.setText(mTrack.album.name);
-        durationHandler.removeCallbacks(updateSeekBarTime);
         seekBar.setProgress(0);
         songProgress.setText("");
         songTime.setText("");

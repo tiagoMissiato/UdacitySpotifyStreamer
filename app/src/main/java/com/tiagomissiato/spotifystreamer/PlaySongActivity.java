@@ -76,13 +76,11 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
 
     View divider, songInfo;//, vibrant, vibrantD, vibrantL, muted, mutedD, mutedL;
     String imageUrl;
-    MediaPlayer mediaPlayer;
-    private Handler durationHandler = new Handler();
     HashMap<String, Integer> paletteHash;
 
     int pauseRs = R.mipmap.ic_pause;
     int playRs = R.mipmap.ic_play;
-
+    boolean loadBigImage = false;
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -133,11 +131,13 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
                 @Override
                 public void onSharedElementEnd(List<String> sharedElementNames, List<View> sharedElements, List<View> sharedElementSnapshots) {
                     super.onSharedElementEnd(sharedElementNames, sharedElements, sharedElementSnapshots);
+                    //load the big image in background;
                     Glide.with(PlaySongActivity.this).load(UtilFunctions.getBigImageUrl(mTrack.album.images))
                             .into(new SimpleTarget<GlideDrawable>() {
                                 @Override
                                 public void onResourceReady(GlideDrawable resource, GlideAnimation<? super GlideDrawable> glideAnimation) {
                                     songImage.setImageDrawable(resource.getCurrent());
+                                    loadBigImage = true;
                                 }
                             });
                 }
@@ -148,7 +148,7 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
             @Override
             public boolean onPreDraw() {
                 imgContainer.getViewTreeObserver().removeOnPreDrawListener(this);
-                setupImage();
+                setupImageBig();
                 return false;
             }
         });
@@ -174,6 +174,30 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
         }
 
         mToolbar.setPadding(0, getStatusBarHeight(), 0, 0);
+    }
+
+    public void setupImageBig(){
+          //Set image half of screen
+        int size = imgContainer.getWidth();
+        LinearLayout.LayoutParams paramsSongImg = (LinearLayout.LayoutParams) songImage.getLayoutParams();
+        paramsSongImg.width = size;
+        paramsSongImg.height = size;
+        songImage.setLayoutParams(paramsSongImg);
+
+        Glide.with(PlaySongActivity.this).load(imageUrl)
+        .into(new SimpleTarget<GlideDrawable>() {
+            @Override
+            public void onResourceReady(GlideDrawable resource, GlideAnimation<? super GlideDrawable> glideAnimation) {
+                //only place image if the big one os not yet loaded
+                if(!loadBigImage)
+                    songImage.setImageDrawable(resource.getCurrent());
+            }
+        });
+
+        if(mTrack.palette != null)
+            configureColors(mTrack.palette);
+        else
+            setupColors();
     }
 
     public void setupImage(){
@@ -388,22 +412,8 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
     @Override
     protected void onPause() {
         super.onPause();
-        if(mediaPlayer != null)
-            mediaPlayer.stop();
     }
 
-    public void loadBigImage(){
-        Log.i("DEBUG", "loadBigImage");
-        Glide.with(this).load(mTrack.album.images.get(0).url)
-                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                .into(new GlideDrawableImageViewTarget(songImage) {
-                    @Override
-                    public void onResourceReady(GlideDrawable drawable, GlideAnimation anim) {
-                        super.onResourceReady(drawable, anim);
-//                        loadBigImage();
-                    }
-                });
-    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -454,68 +464,14 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
                     PlayerConstants.SONG_NUMBER = mTrack.pos;
                     Intent i = new Intent(this,SongService.class);
                     startService(i);
-//                    playPause.setImageResource(pauseRs);
                 } else {
                     if(!PlayerConstants.SONG_PAUSED){
                         Controls.pauseControl(this);
-//                        playPause.setImageResource(playRs);
                     }else{
                         Controls.playControl(this);
-//                        playPause.setImageResource(pauseRs);
                     }
                 }
-//                try {
-//                    if(mediaPlayer != null && mediaPlayer.isPlaying()){
-//                        playPause.setImageResource(playRs);
-//                        mediaPlayer.pause();
-//                    } else {
-//                        if(mediaPlayer == null) {
-//                            mediaPlayer = new MediaPlayer();
-//                            mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-//                            mediaPlayer.setDataSource(mTrack.preview_url);
-////                            mediaPlayer.prepare(); // might take long! (for buffering, etc)
-//                            playPause.setClickable(false);
-//                            buffering.setVisibility(View.VISIBLE);
-//                            bufferingText.setVisibility(View.VISIBLE);
-//                            mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-//                                public void onPrepared(MediaPlayer mp) {
-//                                    mediaPlayer.start();
-//                                    playPause.setImageResource(pauseRs);
-//                                    playPause.setClickable(true);
-//                                    buffering.setVisibility(View.GONE);
-//                                    bufferingText.setVisibility(View.GONE);
-//
-//                                    int finalTime = mediaPlayer.getDuration();
-//                                    long min = TimeUnit.MILLISECONDS.toMinutes((long) finalTime);
-//                                    long sec = TimeUnit.MILLISECONDS.toSeconds((long) finalTime);
-//
-//                                    seekBar.setMax(finalTime);
-//                                    seekBar.setClickable(false);
-//
-//                                    mediaPlayer.start();
-//                                    int timeElapsed = mediaPlayer.getCurrentPosition();
-//                                    seekBar.setProgress(timeElapsed);
-//
-//                                    long minP = TimeUnit.MILLISECONDS.toMinutes((long) timeElapsed);
-//                                    long secP = TimeUnit.MILLISECONDS.toSeconds((long) timeElapsed);
-//
-//                                    songProgress.setText(String.format("%02d:%02d", minP, secP));
-//                                    songTime.setText(String.format("%02d:%02d", min, sec));
-//                                    durationHandler.postDelayed(updateSeekBarTime, 100);
-//                                }
-//                            });
-//                            mediaPlayer.prepareAsync();
-//                        } else {
-//                            mediaPlayer.start();
-//                            playPause.setImageResource(pauseRs);
-//                            int timeElapsed = mediaPlayer.getCurrentPosition();
-//                            seekBar.setProgress(timeElapsed);
-//                            durationHandler.postDelayed(updateSeekBarTime, 100);
-//                        }
-//                    }
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
+
                 break;
             case R.id.next:
                 next();
@@ -539,42 +495,16 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
 
     private void reloadTrackInfo() {
 
-//        boolean shouldPlay = mediaPlayer != null && mediaPlayer.isPlaying();
-//
-//        if (mediaPlayer != null) {
-//            mediaPlayer.stop();
-//            mediaPlayer.release();
-//            mediaPlayer = null;
-//        }
-
         imageUrl = UtilFunctions.getBigImageUrl(mTrack.album.images);
         setupImage();
         songName.setText(mTrack.name);
         songAlbum.setText(mTrack.album.name);
-        durationHandler.removeCallbacks(updateSeekBarTime);
         seekBar.setProgress(0);
         songProgress.setText("");
         songTime.setText("");
         playPause.setImageResource(pauseRs);
 
-//        if(shouldPlay)
-//            playPause.performClick();
     }
-
-    //handler to change seekBarTime
-    private Runnable updateSeekBarTime = new Runnable() {
-        public void run() {
-            //get current position
-            int timeElapsed = mediaPlayer.getCurrentPosition();
-
-            long min = TimeUnit.MILLISECONDS.toMinutes((long) timeElapsed);
-            long sec = TimeUnit.MILLISECONDS.toSeconds((long) timeElapsed);
-            songProgress.setText(String.format("%02d:%02d", min, sec));
-
-            seekBar.setProgress(timeElapsed);
-            durationHandler.postDelayed(this, 100);
-        }
-    };
 
     public int getStatusBarHeight() {
         int result = 0;
@@ -615,7 +545,6 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
         setupImage();
         songName.setText(mTrack.name);
         songAlbum.setText(mTrack.album.name);
-        durationHandler.removeCallbacks(updateSeekBarTime);
         seekBar.setProgress(0);
         songProgress.setText("");
         songTime.setText("");
