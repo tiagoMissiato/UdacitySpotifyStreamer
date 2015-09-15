@@ -2,6 +2,7 @@ package com.tiagomissiato.spotifystreamer.fragment;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityOptionsCompat;
@@ -51,13 +52,13 @@ public class TopTenFragment extends Fragment{
 
     RecyclerView.LayoutManager mLayoutManager;
     RecyclerView trackList;
+    ArtistTopTrackAdapter adapter;
 
     LinearLayout noResult;
 
     Artist mArtist;
 
     ProgressBar loading;
-
     TrackTree tree;
     int treeNodeSize;
 
@@ -187,10 +188,18 @@ public class TopTenFragment extends Fragment{
         }
     }
 
+    public void changeOrientation(){
+        if(adapter != null){
+            if(getResources().getBoolean(R.bool.has_two_panes))
+                adapter.changeListener((MainActivity) mActivity);
+            else
+                adapter.changeListener((TopTenActivity) mActivity);
+        }
+    }
+
     public void populateList(){
         if(tree != null) {
             if(tree.track != null) {
-                ArtistTopTrackAdapter adapter;
                 if(getResources().getBoolean(R.bool.has_two_panes)){
                     adapter = new ArtistTopTrackAdapter(mActivity, tree, treeNodeSize, (MainActivity) mActivity);
                 } else {

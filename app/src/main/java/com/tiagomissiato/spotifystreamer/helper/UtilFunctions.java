@@ -74,6 +74,7 @@ public class UtilFunctions {
 	public static String getSmallImageUrl(List<Image> images){
 		String correctImage = "";
 
+		correctImage = images.get(0).url;
 		for(Image img : images){
 			// put add and sub 5 to compare because in the URL there was some width 199, soh just in case;
 			if(img.width >= 195 && img.width <= 305)
@@ -87,6 +88,7 @@ public class UtilFunctions {
 	public static String getBigImageUrl(List<Image> images){
 		String correctImage = "";
 
+		correctImage = images.get(0).url;
 		for(Image img : images){
 			// put add and sub 5 to compare because in the URL there was some width 199, soh just in case;
 			if(img.width >= 630 && img.width <= 650)

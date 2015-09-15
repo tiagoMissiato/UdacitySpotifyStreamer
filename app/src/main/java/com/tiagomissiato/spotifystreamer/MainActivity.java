@@ -1,6 +1,7 @@
 package com.tiagomissiato.spotifystreamer;
 
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -8,6 +9,7 @@ import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 
 import com.tiagomissiato.spotifystreamer.adapter.ArtistAdapter;
@@ -28,6 +30,7 @@ public class MainActivity extends AppCompatActivity implements ArtistTopTrackAda
 
     SearchFragment searchFragment;
     TopTenFragment topTenFragment;
+    PlaySongDialogFragment playDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +45,8 @@ public class MainActivity extends AppCompatActivity implements ArtistTopTrackAda
         topTenFragment = (TopTenFragment) getSupportFragmentManager().findFragmentById(R.id.top_ten_container);
 
         if(getResources().getBoolean(R.bool.has_two_panes)){
+            Log.i("ORIENTAION", "has_two_panes[onCreate]" + String.valueOf(getResources().getBoolean(R.bool.has_two_panes)));
+
             searchFragment.setTwoPaneListener(new ArtistAdapter.OnItemClicked() {
                 @Override
                 public void onClicked(Artist item) {
@@ -49,47 +54,56 @@ public class MainActivity extends AppCompatActivity implements ArtistTopTrackAda
                 }
             });
         }
-//        handleFragment();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.i("DEBUG", "onResume");
+
+        //means that is possible to get song info
+        boolean isServiceRunning = UtilFunctions.isServiceRunning(SongService.class.getName(), this);
+
+        if(isServiceRunning && PlayerConstants.SONGS_LIST != null) {
+            Track track = PlayerConstants.SONGS_LIST.findNode(PlayerConstants.SONG_NUMBER);
+            if (getResources().getBoolean(R.bool.has_two_panes)) {
+                openSongDialog(track, null, UtilFunctions.getBigImageUrl(track.album.images));
+            }
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.i("DEBUG", "onPause");
+
+        if(playDialog != null)
+            playDialog.dismiss();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
     }
 
     @Override
     public void onClicked(Track item, Palette palette, View image, String url) {
 
-        PlaySongDialogFragment dialog = new PlaySongDialogFragment();
-        Bundle bnd = new Bundle();
-        bnd.putSerializable(PlaySongActivity.TRACK, item);
-
-        bnd.putString("TRANSITION_KEY", ViewCompat.getTransitionName(image));
-        bnd.putString("IMAGE_URL", url);
-
-        dialog.setArguments(bnd);
-
-        dialog.show(getSupportFragmentManager(), TAG);
-
-//        PlayerConstants.SONG_PAUSED = false;
-//        PlayerConstants.SONG_NUMBER = item.pos;
-//        boolean isServiceRunning = UtilFunctions.isServiceRunning(SongService.class.getName(), getApplicationContext());
-//        if (!isServiceRunning) {
-//            Intent i = new Intent(getApplicationContext(),SongService.class);
-//            startService(i);
-//        } else {
-//            PlayerConstants.SONG_CHANGE_HANDLER.sendMessage(PlayerConstants.SONG_CHANGE_HANDLER.obtainMessage());
-//        }
+        openSongDialog(item, image, url);
     }
 
-//    public void handleFragment(){
-//
-//        FragmentManager fm = getSupportFragmentManager();
-//
-//        Fragment fragment = fm.findFragmentByTag(SearchFragment.TAG);
-//        if(fragment == null)
-//            fragment = SearchFragment.newInstance();
-//
-//        fm.beginTransaction()
-//                .replace(R.id.search_container, fragment, SearchFragment.TAG)
-//                .commit();
-//
-//    }
+    private void openSongDialog(Track item, View image, String url) {
+        if(playDialog == null || !playDialog.isVisible()) {
+            playDialog = new PlaySongDialogFragment();
+            Bundle bnd = new Bundle();
+            bnd.putSerializable(PlaySongActivity.TRACK, item);
 
-    
+            bnd.putString("TRANSITION_KEY", image != null ? ViewCompat.getTransitionName(image) : null);
+            bnd.putString("IMAGE_URL", url);
+
+            playDialog.setArguments(bnd);
+
+            playDialog.show(getSupportFragmentManager(), TAG);
+        }
+    }
 }

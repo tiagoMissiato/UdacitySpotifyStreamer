@@ -64,12 +64,12 @@ public class SongService extends Service implements AudioManager.OnAudioFocusCha
         
         currentVersionSupportBigNotification = UtilFunctions.currentVersionSupportBigNotification();
         timer = new Timer();
-        mp.setOnCompletionListener(new OnCompletionListener() {
-			@Override
-			public void onCompletion(MediaPlayer mp) {
-				Controls.nextControl(getApplicationContext());
-			}
-		});
+//        mp.setOnCompletionListener(new OnCompletionListener() {
+//			@Override
+//			public void onCompletion(MediaPlayer mp) {
+//				Controls.nextControl(getApplicationContext());
+//			}
+//		});
 		super.onCreate();
 	}
 
@@ -278,6 +278,7 @@ public class SongService extends Service implements AudioManager.OnAudioFocusCha
 	@SuppressLint("NewApi")
 	private void playSong(Track data) {
 		try {
+			mp.stop();
 			mp.reset();
 			mp.setDataSource(data.preview_url);
 			if(PlayerConstants.UI_CONTROL_LISTENER != null)

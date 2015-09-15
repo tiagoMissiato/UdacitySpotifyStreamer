@@ -29,6 +29,9 @@ public class TopTenActivity extends AppCompatActivity implements ArtistTopTrackA
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_top_ten);
 
+        if(getResources().getBoolean(R.bool.has_two_panes))
+            finish();
+
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
             getWindow().setSharedElementExitTransition(new TransitionSet().
                 addTransition(new ChangeImageTransform().addTarget("song_album_image")));

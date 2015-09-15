@@ -1,5 +1,6 @@
 package com.tiagomissiato.spotifystreamer.view;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -64,6 +65,8 @@ import java.util.concurrent.TimeUnit;
  */
 public class PlaySongDialogFragment extends DialogFragment implements View.OnClickListener, UIActionsInterface {
 
+    public static String INSTANCE_PROGRESS_POSITION = "play.song.progress.position";
+
     public static String TRACK = "play.song.track";
     public static String PALETTE = "play.song.palette";
 
@@ -88,6 +91,7 @@ public class PlaySongDialogFragment extends DialogFragment implements View.OnCli
 
     int pauseRs = R.mipmap.ic_pause;
     int playRs = R.mipmap.ic_play;
+    int startProgressPosition = 0;
 
     @Nullable
     @Override
@@ -150,7 +154,68 @@ public class PlaySongDialogFragment extends DialogFragment implements View.OnCli
 
         songName.setText(mTrack.name);
         songAlbum.setText(mTrack.album.name);
+
+//        PlayerConstants.UI_CONTROL_LISTENER = this;
+//        PlayerConstants.PROGRESSBAR_HANDLER = new Handler() {
+//            @Override
+//            public void handleMessage(Message msg) {
+//                Integer i[] = (Integer[]) msg.obj;
+//                songTime.setText(UtilFunctions.getDuration(i[1]));
+//                songProgress.setText(UtilFunctions.getDuration(i[0]));
+//                seekBar.setProgress(i[2]);
+//            }
+//        };
         return view;
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        PlayerConstants.UI_CONTROL_LISTENER = this;
+        PlayerConstants.PROGRESSBAR_HANDLER = new Handler(){
+            @Override
+            public void handleMessage(Message msg){
+                Integer i[] = (Integer[])msg.obj;
+                songTime.setText(UtilFunctions.getDuration(i[1]));
+                songProgress.setText(UtilFunctions.getDuration(i[0]));
+                seekBar.setProgress(i[2]);
+            }
+        };
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        //autoplay
+        if(PlayerConstants.SONG_PAUSED) {
+            boolean isServiceRunning = UtilFunctions.isServiceRunning(SongService.class.getName(), getActivity());
+            if (!isServiceRunning) {
+                startBuffering();
+                playPause.performClick();
+            } else {
+                startBuffering();
+                PlayerConstants.SONG_NUMBER = mTrack.pos;
+                PlayerConstants.SONG_CHANGE_HANDLER.sendMessage(PlayerConstants.SONG_CHANGE_HANDLER.obtainMessage());
+                PlayerConstants.SONG_PAUSED = false;
+            }
+        } else {
+            if(PlayerConstants.SONG_NUMBER != mTrack.pos){
+                startBuffering();
+                PlayerConstants.SONG_NUMBER = mTrack.pos;
+                PlayerConstants.SONG_CHANGE_HANDLER.sendMessage(PlayerConstants.SONG_CHANGE_HANDLER.obtainMessage());
+                PlayerConstants.SONG_PAUSED = false;
+            }
+        }
+        pausePlay();
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+
+
     }
 
     public void setupImage(){
@@ -318,17 +383,6 @@ public class PlaySongDialogFragment extends DialogFragment implements View.OnCli
             case R.id.play_pause:
                 boolean isServiceRunning = UtilFunctions.isServiceRunning(SongService.class.getName(), getActivity());
                 if (!isServiceRunning) {
-                    PlayerConstants.UI_CONTROL_LISTENER = this;
-                    PlayerConstants.PROGRESSBAR_HANDLER = new Handler(){
-                        @Override
-                        public void handleMessage(Message msg){
-                            Integer i[] = (Integer[])msg.obj;
-                            songTime.setText(UtilFunctions.getDuration(i[1]));
-                            songProgress.setText(UtilFunctions.getDuration(i[0]));
-                            seekBar.setProgress(i[2]);
-                        }
-                    };
-
                     PlayerConstants.SONG_PAUSED = false;
                     PlayerConstants.SONG_NUMBER = mTrack.pos;
                     Intent i = new Intent(getActivity(),SongService.class);
@@ -339,8 +393,12 @@ public class PlaySongDialogFragment extends DialogFragment implements View.OnCli
                         Controls.pauseControl(getActivity());
                         playPause.setImageResource(playRs);
                     }else{
-                        Controls.playControl(getActivity());
-                        playPause.setImageResource(pauseRs);
+                        if(mTrack.pos == PlayerConstants.SONG_NUMBER) {
+                            Controls.playControl(getActivity());
+                            playPause.setImageResource(pauseRs);
+                        } else {
+                            Controls.playSong(getActivity(), mTrack);
+                        }
                     }
                 }
                 break;
@@ -386,38 +444,46 @@ public class PlaySongDialogFragment extends DialogFragment implements View.OnCli
 
     @Override
     public void startBuffering() {
-        playPause.setClickable(false);
-        buffering.setVisibility(View.VISIBLE);
-        bufferingText.setVisibility(View.VISIBLE);
+        if(isVisible()) {
+            playPause.setClickable(false);
+            buffering.setVisibility(View.VISIBLE);
+            bufferingText.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override
     public void stopBuffering() {
-        playPause.setClickable(true);
-        buffering.setVisibility(View.GONE);
-        bufferingText.setVisibility(View.GONE);
+        if(isVisible()) {
+            playPause.setClickable(true);
+            buffering.setVisibility(View.GONE);
+            bufferingText.setVisibility(View.GONE);
+        }
     }
 
     @Override
     public void changeSongControl() {
-        mTrack = PlayerConstants.SONGS_LIST.findNode(PlayerConstants.SONG_NUMBER);
-        imageUrl = UtilFunctions.getBigImageUrl(mTrack.album.images);
-        setupImage();
-        songName.setText(mTrack.name);
-        songAlbum.setText(mTrack.album.name);
-        seekBar.setProgress(0);
-        songProgress.setText("");
-        songTime.setText("");
-        playPause.setImageResource(pauseRs);
+        if(isVisible()) {
+            mTrack = PlayerConstants.SONGS_LIST.findNode(PlayerConstants.SONG_NUMBER);
+            imageUrl = UtilFunctions.getBigImageUrl(mTrack.album.images);
+            setupImage();
+            songName.setText(mTrack.name);
+            songAlbum.setText(mTrack.album.name);
+            seekBar.setProgress(0);
+            songProgress.setText("");
+            songTime.setText("");
+            playPause.setImageResource(pauseRs);
+        }
 
     }
 
     @Override
     public void pausePlay() {
-        if(PlayerConstants.SONG_PAUSED){
-            playPause.setImageResource(playRs);
-        } else {
-            playPause.setImageResource(pauseRs);
-        }
+//        if(isVisible()) {
+            if (PlayerConstants.SONG_PAUSED) {
+                playPause.setImageResource(playRs);
+            } else {
+                playPause.setImageResource(pauseRs);
+            }
+//        }
     }
 }

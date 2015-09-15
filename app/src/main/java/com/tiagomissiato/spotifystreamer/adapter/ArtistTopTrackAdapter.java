@@ -33,7 +33,7 @@ public class ArtistTopTrackAdapter extends RecyclerView.Adapter<ArtistTopTrackAd
     Context mContext;
     private static TrackTree items;
     private int itemsCount;
-    OnItemClicked onItemClicked;
+    private static OnItemClicked onItemClicked;
 
     public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
         TextView albumTitle;
@@ -41,22 +41,20 @@ public class ArtistTopTrackAdapter extends RecyclerView.Adapter<ArtistTopTrackAd
         ImageView albumImage;
         Palette palette;
         String imageUrl;
-        OnItemClicked onItemClicked;
 
-        public ViewHolder(View iteView, OnItemClicked onItemClicked) {
+        public ViewHolder(View iteView) {
             super(iteView);
             this.albumTitle = (TextView) iteView.findViewById(R.id.album_title);
             this.albumSubtitle = (TextView) iteView.findViewById(R.id.album_subtitle);
             this.albumImage = (ImageView) iteView.findViewById(R.id.album_image);
             iteView.setOnClickListener(this);
 
-            this.onItemClicked = onItemClicked;
         }
 
         @Override
         public void onClick(View view) {
-            if (onItemClicked != null){
-                onItemClicked.onClicked(items.findNode(getPosition()), palette, albumImage, imageUrl);
+            if (ArtistTopTrackAdapter.onItemClicked != null){
+                ArtistTopTrackAdapter.onItemClicked.onClicked(items.findNode(getPosition()), palette, albumImage, imageUrl);
             }
         }
     }
@@ -65,7 +63,7 @@ public class ArtistTopTrackAdapter extends RecyclerView.Adapter<ArtistTopTrackAd
         ArtistTopTrackAdapter.items = tree;
         this.itemsCount = size;
         this.mContext = mContext;
-        this.onItemClicked = onItemClicked;
+        ArtistTopTrackAdapter.onItemClicked = onItemClicked;
     }
 
     @Override
@@ -83,7 +81,7 @@ public class ArtistTopTrackAdapter extends RecyclerView.Adapter<ArtistTopTrackAd
     public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
         View layout = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.row_top_track, null);
 
-        return new ViewHolder(layout, onItemClicked);
+        return new ViewHolder(layout);
     }
 
     @Override
@@ -125,6 +123,10 @@ public class ArtistTopTrackAdapter extends RecyclerView.Adapter<ArtistTopTrackAd
                     .override(200, 200)
                     .into(viewHolder.albumImage);
         }
+    }
+
+    public void changeListener(OnItemClicked listener){
+        ArtistTopTrackAdapter.onItemClicked = listener;
     }
 
     public interface OnItemClicked{

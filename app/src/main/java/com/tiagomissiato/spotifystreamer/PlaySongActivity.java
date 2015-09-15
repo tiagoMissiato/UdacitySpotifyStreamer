@@ -191,6 +191,8 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
                 //only place image if the big one os not yet loaded
                 if(!loadBigImage)
                     songImage.setImageDrawable(resource.getCurrent());
+
+                supportStartPostponedEnterTransition();
             }
         });
 
