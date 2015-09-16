@@ -9,6 +9,7 @@ import java.security.PublicKey;
 
 public class PlayerConstants {
 
+	public static TrackTree SONGS_NEW_LIST;
 	public static TrackTree SONGS_LIST;
 	//song number which is playing right now from SONGS_LIST
 	public static int SONG_NUMBER = 0;

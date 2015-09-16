@@ -17,6 +17,7 @@ import android.view.View;
 
 import com.tiagomissiato.spotifystreamer.adapter.ArtistTopTrackAdapter;
 import com.tiagomissiato.spotifystreamer.fragment.TopTenFragment;
+import com.tiagomissiato.spotifystreamer.helper.PlayerConstants;
 import com.tiagomissiato.spotifystreamer.model.Artist;
 
 
@@ -79,6 +80,8 @@ public class TopTenActivity extends AppCompatActivity implements ArtistTopTrackA
 
     @Override
     public void onClicked(com.tiagomissiato.spotifystreamer.model.Track item, Palette palette, View image, String url) {
+
+        PlayerConstants.SONGS_LIST = PlayerConstants.SONGS_NEW_LIST;
         Intent playSong = new Intent(this, PlaySongActivity.class);
 
         Bundle bnd = new Bundle();

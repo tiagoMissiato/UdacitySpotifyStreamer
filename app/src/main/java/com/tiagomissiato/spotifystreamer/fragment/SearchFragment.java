@@ -1,11 +1,8 @@
 package com.tiagomissiato.spotifystreamer.fragment;
 
-import android.app.Activity;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -24,6 +21,7 @@ import com.tiagomissiato.spotifystreamer.MainActivity;
 import com.tiagomissiato.spotifystreamer.R;
 import com.tiagomissiato.spotifystreamer.TopTenActivity;
 import com.tiagomissiato.spotifystreamer.adapter.ArtistAdapter;
+import com.tiagomissiato.spotifystreamer.helper.UtilFunctions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -190,6 +188,8 @@ public class SearchFragment extends Fragment implements ArtistAdapter.OnItemClic
 
     @Override
     public void onClicked(com.tiagomissiato.spotifystreamer.model.Artist item) {
+        UtilFunctions.hideKeyboard(getActivity(), albumList);
+
         if(twoPaneListener != null){
             twoPaneListener.onClicked(item);
         } else {

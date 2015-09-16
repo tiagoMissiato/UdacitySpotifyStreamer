@@ -114,7 +114,8 @@ public class SongService extends Service implements AudioManager.OnAudioFocusCha
 					}catch(Exception e){
 						e.printStackTrace();
 					}
-					PlayerConstants.UI_CONTROL_LISTENER.changeSongControl();
+					if(PlayerConstants.UI_CONTROL_LISTENER != null)
+						PlayerConstants.UI_CONTROL_LISTENER.changeSongControl();
 					newNotification();
 					return false;
 				}
@@ -134,7 +135,8 @@ public class SongService extends Service implements AudioManager.OnAudioFocusCha
 						mp.pause();
 					}
 					newNotification();
-					PlayerConstants.UI_CONTROL_LISTENER.pausePlay();
+					if(PlayerConstants.UI_CONTROL_LISTENER != null)
+						PlayerConstants.UI_CONTROL_LISTENER.pausePlay();
 					return false;
 				}
 			});
@@ -292,7 +294,8 @@ public class SongService extends Service implements AudioManager.OnAudioFocusCha
 					if(!PlayerConstants.SONG_PAUSED)
 						mp.start();
 
-					PlayerConstants.UI_CONTROL_LISTENER.pausePlay();
+					if(PlayerConstants.UI_CONTROL_LISTENER != null)
+						PlayerConstants.UI_CONTROL_LISTENER.pausePlay();
 					timer = new Timer();
 					timer.scheduleAtFixedRate(new MainTask(), 0, 100);
 				}

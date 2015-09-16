@@ -189,8 +189,8 @@ public class PlaySongDialogFragment extends DialogFragment implements View.OnCli
         super.onResume();
 
         //autoplay
+        boolean isServiceRunning = UtilFunctions.isServiceRunning(SongService.class.getName(), getActivity());
         if(PlayerConstants.SONG_PAUSED) {
-            boolean isServiceRunning = UtilFunctions.isServiceRunning(SongService.class.getName(), getActivity());
             if (!isServiceRunning) {
                 startBuffering();
                 playPause.performClick();
@@ -200,8 +200,9 @@ public class PlaySongDialogFragment extends DialogFragment implements View.OnCli
                 PlayerConstants.SONG_CHANGE_HANDLER.sendMessage(PlayerConstants.SONG_CHANGE_HANDLER.obtainMessage());
                 PlayerConstants.SONG_PAUSED = false;
             }
-        } else {
-            if(PlayerConstants.SONG_NUMBER != mTrack.pos){
+        } else if (isServiceRunning) {
+            Track track = PlayerConstants.SONGS_LIST.findNode(PlayerConstants.SONG_NUMBER);
+            if(!track.id.equals(mTrack.id)){
                 startBuffering();
                 PlayerConstants.SONG_NUMBER = mTrack.pos;
                 PlayerConstants.SONG_CHANGE_HANDLER.sendMessage(PlayerConstants.SONG_CHANGE_HANDLER.obtainMessage());
@@ -322,6 +323,9 @@ public class PlaySongDialogFragment extends DialogFragment implements View.OnCli
         Palette.Swatch swatch = p.getMutedSwatch();
         songName.setTextColor(swatch.getTitleTextColor());
         songAlbum.setTextColor(swatch.getTitleTextColor());
+
+        //check if service is running to change the play pause icon
+        pausePlay();
     }
 
     private void configureColors(TrackPalette palette) {
@@ -371,6 +375,9 @@ public class PlaySongDialogFragment extends DialogFragment implements View.OnCli
 
         songName.setTextColor(palette.textColor);
         songAlbum.setTextColor(palette.textColor);
+
+        //check if service is running to change the play pause icon
+        pausePlay();
     }
 
     @Override

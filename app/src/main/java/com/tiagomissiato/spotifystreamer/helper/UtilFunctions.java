@@ -4,6 +4,8 @@ import android.app.ActivityManager;
 import android.app.ActivityManager.RunningServiceInfo;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 
 import com.bumptech.glide.Glide;
 import com.tiagomissiato.spotifystreamer.model.Artist;
@@ -99,22 +101,17 @@ public class UtilFunctions {
 		return correctImage;
 	}
 
-	public static Bitmap getSmallImage(Context context, Track track){
+	public static void showKeyboard(Context context) {
+		InputMethodManager manager = (InputMethodManager)context
+				.getSystemService(Context.INPUT_METHOD_SERVICE);
+		manager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+	}
 
-		Bitmap theBitmap = null;
-//		try {
-//			theBitmap = Glide.
-//                    with(context).
-//                    load(getSmallImageUrl(track.album.images)).
-//                    asBitmap().
-//                    into(200, 200).
-//					get();
-//		} catch (InterruptedException e) {
-//			e.printStackTrace();
-//		} catch (ExecutionException e) {
-//			e.printStackTrace();
-//		}
-
-		return theBitmap;
+	public static void hideKeyboard(Context context, View view) {
+		if (view != null) {
+			InputMethodManager manager = (InputMethodManager)context
+					.getSystemService(Context.INPUT_METHOD_SERVICE);
+			manager.hideSoftInputFromWindow(view.getWindowToken(), 0);
+		}
 	}
 }

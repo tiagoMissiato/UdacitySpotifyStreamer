@@ -75,7 +75,6 @@ public class MainActivity extends AppCompatActivity implements ArtistTopTrackAda
     @Override
     protected void onPause() {
         super.onPause();
-        Log.i("DEBUG", "onPause");
 
         if(playDialog != null)
             playDialog.dismiss();
@@ -89,6 +88,7 @@ public class MainActivity extends AppCompatActivity implements ArtistTopTrackAda
     @Override
     public void onClicked(Track item, Palette palette, View image, String url) {
 
+        PlayerConstants.SONGS_LIST = PlayerConstants.SONGS_NEW_LIST;
         openSongDialog(item, image, url);
     }
 

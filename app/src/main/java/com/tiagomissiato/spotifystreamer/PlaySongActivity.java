@@ -409,6 +409,46 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
     @Override
     protected void onResume() {
         super.onResume();
+
+        PlayerConstants.UI_CONTROL_LISTENER = this;
+        PlayerConstants.PROGRESSBAR_HANDLER = new Handler(){
+            @Override
+            public void handleMessage(Message msg){
+                Integer i[] = (Integer[])msg.obj;
+                songTime.setText(UtilFunctions.getDuration(i[1]));
+                songProgress.setText(UtilFunctions.getDuration(i[0]));
+                seekBar.setProgress(i[2]);
+            }
+        };
+
+        //autoplay
+        if(PlayerConstants.SONG_PAUSED) {
+            boolean isServiceRunning = UtilFunctions.isServiceRunning(SongService.class.getName(), this);
+            if (!isServiceRunning) {
+                startBuffering();
+                playPause.performClick();
+            } else {
+                startBuffering();
+                PlayerConstants.SONG_NUMBER = mTrack.pos;
+                PlayerConstants.SONG_CHANGE_HANDLER.sendMessage(PlayerConstants.SONG_CHANGE_HANDLER.obtainMessage());
+                PlayerConstants.SONG_PAUSED = false;
+            }
+        } else {
+            if(PlayerConstants.SONG_NUMBER != mTrack.pos){
+                startBuffering();
+                PlayerConstants.SONG_NUMBER = mTrack.pos;
+                PlayerConstants.SONG_CHANGE_HANDLER.sendMessage(PlayerConstants.SONG_CHANGE_HANDLER.obtainMessage());
+                PlayerConstants.SONG_PAUSED = false;
+            }
+        }
+        pausePlay();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        PlayerConstants.UI_CONTROL_LISTENER = null;
     }
 
     @Override
@@ -451,29 +491,24 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
             case R.id.play_pause:
                 boolean isServiceRunning = UtilFunctions.isServiceRunning(SongService.class.getName(), this);
                 if (!isServiceRunning) {
-                    PlayerConstants.UI_CONTROL_LISTENER = this;
-                    PlayerConstants.PROGRESSBAR_HANDLER = new Handler(){
-                        @Override
-                        public void handleMessage(Message msg){
-                            Integer i[] = (Integer[])msg.obj;
-                            songTime.setText(UtilFunctions.getDuration(i[1]));
-                            songProgress.setText(UtilFunctions.getDuration(i[0]));
-                            seekBar.setProgress(i[2]);
-                        }
-                    };
-
                     PlayerConstants.SONG_PAUSED = false;
                     PlayerConstants.SONG_NUMBER = mTrack.pos;
                     Intent i = new Intent(this,SongService.class);
                     startService(i);
+                    playPause.setImageResource(pauseRs);
                 } else {
                     if(!PlayerConstants.SONG_PAUSED){
                         Controls.pauseControl(this);
+                        playPause.setImageResource(playRs);
                     }else{
-                        Controls.playControl(this);
+                        if(mTrack.pos == PlayerConstants.SONG_NUMBER) {
+                            Controls.playControl(this);
+                            playPause.setImageResource(pauseRs);
+                        } else {
+                            Controls.playSong(this, mTrack);
+                        }
                     }
                 }
-
                 break;
             case R.id.next:
                 next();
@@ -497,15 +532,13 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
 
     private void reloadTrackInfo() {
 
-        imageUrl = UtilFunctions.getBigImageUrl(mTrack.album.images);
+        imageUrl = mTrack.album.images.get(0).url;
         setupImage();
         songName.setText(mTrack.name);
         songAlbum.setText(mTrack.album.name);
         seekBar.setProgress(0);
         songProgress.setText("");
         songTime.setText("");
-        playPause.setImageResource(pauseRs);
-
     }
 
     public int getStatusBarHeight() {
@@ -544,7 +577,17 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
     public void changeSongControl() {
         mTrack = PlayerConstants.SONGS_LIST.findNode(PlayerConstants.SONG_NUMBER);
         imageUrl = UtilFunctions.getBigImageUrl(mTrack.album.images);
-        setupImage();
+        if(imgContainer.getWidth() > 0 && imgContainer.getHeight() > 0)
+            setupImage();
+
+        imgContainer.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+            @Override
+            public boolean onPreDraw() {
+                imgContainer.getViewTreeObserver().removeOnPreDrawListener(this);
+                setupImage();
+                return false;
+            }
+        });
         songName.setText(mTrack.name);
         songAlbum.setText(mTrack.album.name);
         seekBar.setProgress(0);
@@ -556,7 +599,7 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
 
     @Override
     public void pausePlay() {
-        if(PlayerConstants.SONG_PAUSED){
+        if (PlayerConstants.SONG_PAUSED) {
             playPause.setImageResource(playRs);
         } else {
             playPause.setImageResource(pauseRs);

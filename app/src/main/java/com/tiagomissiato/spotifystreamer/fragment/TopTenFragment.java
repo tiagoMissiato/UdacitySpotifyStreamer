@@ -164,7 +164,7 @@ public class TopTenFragment extends Fragment{
                     tree.findNode(0).prev = tree.findNode(treeNodeSize - 1);
                     tree.findNode(treeNodeSize - 1).next = tree.findNode(0);
 
-                    PlayerConstants.SONGS_LIST = tree;
+                    PlayerConstants.SONGS_NEW_LIST = tree;
 
                     mActivity.runOnUiThread(new Runnable() {
                         @Override

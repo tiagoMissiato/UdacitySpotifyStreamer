@@ -18,7 +18,7 @@ public class Controls {
 
 	public static void nextControl(Context context) {
 		boolean isServiceRunning = UtilFunctions.isServiceRunning(SongService.class.getName(), context);
-		if (!isServiceRunning)
+		if (!isServiceRunning || PlayerConstants.SONGS_LIST == null)
 			return;
 		PlayerConstants.SONG_NUMBER = PlayerConstants.SONGS_LIST.findNode(PlayerConstants.SONG_NUMBER).next.pos;
 		PlayerConstants.SONG_CHANGE_HANDLER.sendMessage(PlayerConstants.SONG_CHANGE_HANDLER.obtainMessage());
@@ -27,7 +27,7 @@ public class Controls {
 
 	public static void previousControl(Context context) {
 		boolean isServiceRunning = UtilFunctions.isServiceRunning(SongService.class.getName(), context);
-		if (!isServiceRunning)
+		if (!isServiceRunning || PlayerConstants.SONGS_LIST == null)
 			return;
 
 		PlayerConstants.SONG_NUMBER = PlayerConstants.SONGS_LIST.findNode(PlayerConstants.SONG_NUMBER).prev.pos;
@@ -37,7 +37,7 @@ public class Controls {
 
 	public static void playSong(Context context, Track track) {
 		boolean isServiceRunning = UtilFunctions.isServiceRunning(SongService.class.getName(), context);
-		if (!isServiceRunning)
+		if (!isServiceRunning || PlayerConstants.SONGS_LIST == null)
 			return;
 
 		PlayerConstants.SONG_NUMBER = track.pos;
