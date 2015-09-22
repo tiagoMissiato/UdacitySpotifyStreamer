@@ -160,9 +160,9 @@ public class SongService extends Service implements AudioManager.OnAudioFocusCha
 						PlayerConstants.SONG_PAUSED = true;
 						mp.pause();
 					}
-					newNotification();
-					if(PlayerConstants.UI_CONTROL_LISTENER != null)
-						PlayerConstants.UI_CONTROL_LISTENER.pausePlay();
+                    if(PlayerConstants.UI_CONTROL_LISTENER != null)
+                        PlayerConstants.UI_CONTROL_LISTENER.pausePlay();
+                    newNotification();
 					return false;
 				}
 			});

@@ -21,12 +21,13 @@ import com.tiagomissiato.spotifystreamer.adapter.ArtistTopTrackAdapter;
 import com.tiagomissiato.spotifystreamer.fragment.TopTenFragment;
 import com.tiagomissiato.spotifystreamer.helper.PlayerConstants;
 import com.tiagomissiato.spotifystreamer.helper.UtilFunctions;
+import com.tiagomissiato.spotifystreamer.interfaces.UIActionsInterface;
 import com.tiagomissiato.spotifystreamer.model.Artist;
 import com.tiagomissiato.spotifystreamer.model.Track;
 import com.tiagomissiato.spotifystreamer.service.SongService;
 
 
-public class TopTenActivity extends AppCompatActivity implements ArtistTopTrackAdapter.OnItemClicked {
+public class TopTenActivity extends AppCompatActivity implements ArtistTopTrackAdapter.OnItemClicked, UIActionsInterface {
 
     Artist mArtist;
 
@@ -87,8 +88,17 @@ public class TopTenActivity extends AppCompatActivity implements ArtistTopTrackA
     protected void onResume() {
         super.onResume();
 
+        PlayerConstants.TOP_TEN_ACTIVITY = this;
+
         //to check if should show now playing button
         invalidateOptionsMenu();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        PlayerConstants.UI_CONTROL_LISTENER = null;
     }
 
     @Override
@@ -143,5 +153,26 @@ public class TopTenActivity extends AppCompatActivity implements ArtistTopTrackA
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void startBuffering() {
+
+    }
+
+    @Override
+    public void stopBuffering() {
+
+    }
+
+    @Override
+    public void changeSongControl() {
+
+    }
+
+    @Override
+    public void pausePlay() {
+        //to check if should show now playing button
+        invalidateOptionsMenu();
     }
 }

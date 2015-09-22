@@ -22,13 +22,14 @@ import com.tiagomissiato.spotifystreamer.fragment.SearchFragment;
 import com.tiagomissiato.spotifystreamer.fragment.TopTenFragment;
 import com.tiagomissiato.spotifystreamer.helper.PlayerConstants;
 import com.tiagomissiato.spotifystreamer.helper.UtilFunctions;
+import com.tiagomissiato.spotifystreamer.interfaces.UIActionsInterface;
 import com.tiagomissiato.spotifystreamer.model.Artist;
 import com.tiagomissiato.spotifystreamer.model.Track;
 import com.tiagomissiato.spotifystreamer.service.SongService;
 import com.tiagomissiato.spotifystreamer.view.PlaySongDialogFragment;
 
 
-public class MainActivity extends AppCompatActivity implements ArtistTopTrackAdapter.OnItemClicked /*implements ArtistAdapter.OnItemClicked*/ {
+public class MainActivity extends AppCompatActivity implements ArtistTopTrackAdapter.OnItemClicked, UIActionsInterface /*implements ArtistAdapter.OnItemClicked*/ {
 
     private String TAG = MainActivity.class.getSimpleName();
 
@@ -98,6 +99,8 @@ public class MainActivity extends AppCompatActivity implements ArtistTopTrackAda
         super.onResume();
         Log.i("DEBUG", "onResume");
 
+        PlayerConstants.MAIN_ACTIVITY = this;
+
         //means that is possible to get song info
         boolean isServiceRunning = UtilFunctions.isServiceRunning(SongService.class.getName(), this);
 
@@ -108,6 +111,8 @@ public class MainActivity extends AppCompatActivity implements ArtistTopTrackAda
             }
         }
 
+        //to check if should show now playing button
+        invalidateOptionsMenu();
 
     }
 
@@ -149,5 +154,26 @@ public class MainActivity extends AppCompatActivity implements ArtistTopTrackAda
 
             playDialog.show(getSupportFragmentManager(), TAG);
         }
+    }
+
+    @Override
+    public void startBuffering() {
+
+    }
+
+    @Override
+    public void stopBuffering() {
+
+    }
+
+    @Override
+    public void changeSongControl() {
+
+    }
+
+    @Override
+    public void pausePlay() {
+        //to check if should show now playing button
+        invalidateOptionsMenu();
     }
 }

@@ -55,6 +55,13 @@ public class NotificationBroadcast extends BroadcastReceiver {
 					if(!PlayerConstants.SONG_PAUSED)
 						Controls.pauseControl(context);
 
+					try{
+                        PlayerConstants.MAIN_ACTIVITY.pausePlay();
+                        PlayerConstants.TOP_TEN_ACTIVITY.pausePlay();
+                    }catch(Exception ignored){
+                        Log.i("ERROR", ignored.getMessage());
+                    }
+
 					Intent i = new Intent(context, SongService.class);
 					context.stopService(i);
         		}else if (intent.getAction().equals(SongService.NOTIFY_PREVIOUS)) {
