@@ -151,27 +151,32 @@ public class TopTenFragment extends Fragment{
 
                     int i = 0;
                     treeNodeSize = tracks.tracks.size();
-                    for (Track tk : tracks.tracks) {
-                        com.tiagomissiato.spotifystreamer.model.Track current = new com.tiagomissiato.spotifystreamer.model.Track(i, tk);
+                    if (treeNodeSize > 0){
+                        for (Track tk : tracks.tracks) {
+                            com.tiagomissiato.spotifystreamer.model.Track current = new com.tiagomissiato.spotifystreamer.model.Track(i, tk);
 
-                        tree.addNode(i, current);
-                        if (i > 0 && i < treeNodeSize - 1)
-                            tree.addNode(i - 1, tree.findNode(i - 1));
+                            tree.addNode(i, current);
+                            if (i > 0 && i < treeNodeSize - 1)
+                                tree.addNode(i - 1, tree.findNode(i - 1));
 
-                        i++;
+                            i++;
+                        }
+
+                        tree.findNode(0).prev = tree.findNode(treeNodeSize - 1);
+                        tree.findNode(treeNodeSize - 1).next = tree.findNode(0);
+
+                        PlayerConstants.SONGS_NEW_LIST = tree;
                     }
-
-                    tree.findNode(0).prev = tree.findNode(treeNodeSize - 1);
-                    tree.findNode(treeNodeSize - 1).next = tree.findNode(0);
-
-                    PlayerConstants.SONGS_NEW_LIST = tree;
-
                     mActivity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            populateList();
+                            if(treeNodeSize > 0)
+                                populateList();
+                            else
+                                hideLoading();
                         }
                     });
+
                 }
 
                 @Override

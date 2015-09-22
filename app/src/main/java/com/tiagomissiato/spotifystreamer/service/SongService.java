@@ -51,7 +51,15 @@ public class SongService extends Service implements AudioManager.OnAudioFocusCha
 	Bitmap mDummyAlbumArt;
 	private static Timer timer;
 	private static boolean currentVersionSupportBigNotification = false;
-	
+
+    OnCompletionListener completionListener = new OnCompletionListener() {
+        @Override
+        public void onCompletion(MediaPlayer mp) {
+//				Controls.nextControl(getApplicationContext());
+            Log.i("DEBUG","onCompletion");
+        }
+    };
+
 	@Override
 	public IBinder onBind(Intent intent) {
 		return null;
@@ -64,13 +72,15 @@ public class SongService extends Service implements AudioManager.OnAudioFocusCha
         
         currentVersionSupportBigNotification = UtilFunctions.currentVersionSupportBigNotification();
         timer = new Timer();
-//        mp.setOnCompletionListener(new OnCompletionListener() {
-//			@Override
-//			public void onCompletion(MediaPlayer mp) {
-//				Controls.nextControl(getApplicationContext());
-//			}
-//		});
+//        mp.setOnCompletionListener(completionListener);
 		super.onCreate();
+	}
+
+	@Override
+	public void onTaskRemoved(Intent rootIntent) {
+		super.onTaskRemoved(rootIntent);
+
+		stopSelf();
 	}
 
 	/**
@@ -88,13 +98,17 @@ public class SongService extends Service implements AudioManager.OnAudioFocusCha
         public void handleMessage(Message msg){
         	if(mp != null ){
         		int progress = mp.getDuration() > 0 ? (mp.getCurrentPosition()*100) / mp.getDuration() : 0;
+
         		Integer i[] = new Integer[3];
         		i[0] = mp.getCurrentPosition();
         		i[1] = mp.getDuration();
         		i[2] = progress;
+
         		try{
         			PlayerConstants.PROGRESSBAR_HANDLER.sendMessage(PlayerConstants.PROGRESSBAR_HANDLER.obtainMessage(0, i));
-        		}catch(Exception e){}
+        		}catch(Exception e){
+                    Log.i("DEBUG", e.getMessage());
+                }
         	}
     	}
     }; 
@@ -104,6 +118,18 @@ public class SongService extends Service implements AudioManager.OnAudioFocusCha
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		try {
 			Track data = PlayerConstants.SONGS_LIST.findNode(PlayerConstants.SONG_NUMBER);
+
+			PlayerConstants.CHANGE_PROGRESS = new Handler(new Callback() {
+				@Override
+				public boolean handleMessage(Message msg) {
+					int newProgress = (int) msg.obj;
+					if(mp != null && mp.isPlaying()) {
+						int progress = (newProgress * mp.getDuration()) / 100;
+						mp.seekTo(progress);
+					}
+					return false;
+				}
+			});
 
 			PlayerConstants.SONG_CHANGE_HANDLER = new Handler(new Callback() {
 				@Override
@@ -280,7 +306,6 @@ public class SongService extends Service implements AudioManager.OnAudioFocusCha
 	@SuppressLint("NewApi")
 	private void playSong(Track data) {
 		try {
-			mp.stop();
 			mp.reset();
 			mp.setDataSource(data.preview_url);
 			if(PlayerConstants.UI_CONTROL_LISTENER != null)
@@ -297,7 +322,7 @@ public class SongService extends Service implements AudioManager.OnAudioFocusCha
 					if(PlayerConstants.UI_CONTROL_LISTENER != null)
 						PlayerConstants.UI_CONTROL_LISTENER.pausePlay();
 					timer = new Timer();
-					timer.scheduleAtFixedRate(new MainTask(), 0, 100);
+                    timer.scheduleAtFixedRate(new MainTask(), 0, 100);
 				}
 			});
 			mp.prepareAsync();

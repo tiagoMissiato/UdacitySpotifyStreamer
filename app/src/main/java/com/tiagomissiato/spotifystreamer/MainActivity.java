@@ -2,7 +2,9 @@ package com.tiagomissiato.spotifystreamer;
 
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewCompat;
@@ -10,6 +12,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 
 import com.tiagomissiato.spotifystreamer.adapter.ArtistAdapter;
@@ -57,6 +61,39 @@ public class MainActivity extends AppCompatActivity implements ArtistTopTrackAda
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        boolean isServiceRunning = UtilFunctions.isServiceRunning(SongService.class.getName(), this);
+        if(isServiceRunning && !PlayerConstants.SONG_PAUSED)
+            getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.action_now_playing) {
+            Track track = PlayerConstants.SONGS_LIST.findNode(PlayerConstants.SONG_NUMBER);
+            if (getResources().getBoolean(R.bool.has_two_panes)) {
+                openSongDialog(track, null, UtilFunctions.getBigImageUrl(track.album.images));
+            } else {
+                Intent playSong = new Intent(this, PlaySongActivity.class);
+
+                Bundle bnd = new Bundle();
+                bnd.putSerializable(PlaySongActivity.TRACK, track);
+
+                bnd.putString("IMAGE_URL", UtilFunctions.getBigImageUrl(track.album.images));
+                playSong.putExtras(bnd);
+
+                startActivity(playSong);
+            }
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         Log.i("DEBUG", "onResume");
@@ -70,6 +107,8 @@ public class MainActivity extends AppCompatActivity implements ArtistTopTrackAda
                 openSongDialog(track, null, UtilFunctions.getBigImageUrl(track.album.images));
             }
         }
+
+
     }
 
     @Override
@@ -87,7 +126,6 @@ public class MainActivity extends AppCompatActivity implements ArtistTopTrackAda
 
     @Override
     public void onClicked(Track item, Palette palette, View image, String url) {
-
         PlayerConstants.SONGS_LIST = PlayerConstants.SONGS_NEW_LIST;
         openSongDialog(item, image, url);
     }
@@ -101,6 +139,12 @@ public class MainActivity extends AppCompatActivity implements ArtistTopTrackAda
             bnd.putString("TRANSITION_KEY", image != null ? ViewCompat.getTransitionName(image) : null);
             bnd.putString("IMAGE_URL", url);
 
+            playDialog.setOnPlayPause(new PlaySongDialogFragment.OnPlayPause() {
+                @Override
+                public void onPlayPause() {
+                    invalidateOptionsMenu();
+                }
+            });
             playDialog.setArguments(bnd);
 
             playDialog.show(getSupportFragmentManager(), TAG);

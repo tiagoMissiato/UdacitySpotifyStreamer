@@ -80,7 +80,9 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
 
     int pauseRs = R.mipmap.ic_pause;
     int playRs = R.mipmap.ic_play;
-    boolean loadBigImage = false;
+    boolean loadBigImage = false, seekBarDragging = false;
+
+
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,14 +97,26 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
         next = (ImageButton) findViewById(R.id.next);
         buffering = (ProgressBar) findViewById(R.id.buffering_progress);
         seekBar = (SeekBar) findViewById(R.id.seekBar);
-        seekBar.setClickable(false);
-        seekBar.setOnTouchListener(new View.OnTouchListener() {
+        seekBar.setProgress(0);
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            int newProgress = 0;
+
             @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                return true;
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                newProgress = progress;
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                seekBarDragging = true;
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                seekBarDragging = false;
+                Controls.chageProgress(PlaySongActivity.this, newProgress);
             }
         });
-        seekBar.setProgress(0);
 
         songProgress = (TextView) findViewById(R.id.song_progress);
         songTime = (TextView) findViewById(R.id.song_time);
@@ -417,7 +431,9 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
                 Integer i[] = (Integer[])msg.obj;
                 songTime.setText(UtilFunctions.getDuration(i[1]));
                 songProgress.setText(UtilFunctions.getDuration(i[0]));
-                seekBar.setProgress(i[2]);
+                Log.i("PROGRESS","progress: " + i[2]);
+                if(!seekBarDragging)
+                    seekBar.setProgress(i[2]);
             }
         };
 

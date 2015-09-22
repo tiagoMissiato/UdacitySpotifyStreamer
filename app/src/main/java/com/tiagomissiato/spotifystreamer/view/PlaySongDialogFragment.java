@@ -2,9 +2,6 @@ package com.tiagomissiato.spotifystreamer.view;
 
 import android.app.Activity;
 import android.app.Dialog;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.content.Context;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
@@ -12,10 +9,6 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
-import android.media.AudioManager;
-import android.media.MediaPlayer;
-import android.media.session.MediaSession;
-import android.media.session.MediaSessionManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -28,12 +21,10 @@ import android.support.v4.view.ViewCompat;
 import android.support.v7.graphics.Palette;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.Window;
-import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -42,9 +33,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.resource.drawable.GlideDrawable;
 import com.bumptech.glide.request.animation.GlideAnimation;
-import com.bumptech.glide.request.target.GlideDrawableImageViewTarget;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.tiagomissiato.spotifystreamer.R;
 import com.tiagomissiato.spotifystreamer.helper.Controls;
@@ -55,10 +44,8 @@ import com.tiagomissiato.spotifystreamer.model.Track;
 import com.tiagomissiato.spotifystreamer.model.TrackPalette;
 import com.tiagomissiato.spotifystreamer.service.SongService;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by tiagomissiato on 9/3/15.
@@ -84,6 +71,7 @@ public class PlaySongDialogFragment extends DialogFragment implements View.OnCli
     TextView songAlbum;
     SeekBar seekBar;
     ProgressBar buffering;
+    OnPlayPause onPlayPause;
 
     View divider, songInfo;//, vibrant, vibrantD, vibrantL, muted, mutedD, mutedL;
     String imageUrl;
@@ -92,6 +80,8 @@ public class PlaySongDialogFragment extends DialogFragment implements View.OnCli
     int pauseRs = R.mipmap.ic_pause;
     int playRs = R.mipmap.ic_play;
     int startProgressPosition = 0;
+
+    boolean seekBarDragging = false;
 
     @Nullable
     @Override
@@ -113,14 +103,26 @@ public class PlaySongDialogFragment extends DialogFragment implements View.OnCli
         next = (ImageButton) view.findViewById(R.id.next);
         buffering = (ProgressBar) view.findViewById(R.id.buffering_progress);
         seekBar = (SeekBar) view.findViewById(R.id.seekBar);
-        seekBar.setClickable(false);
-        seekBar.setOnTouchListener(new View.OnTouchListener() {
+        seekBar.setProgress(0);
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            int newProgress = 0;
+
             @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                return true;
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                newProgress = progress;
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                seekBarDragging = true;
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                seekBarDragging = false;
+                Controls.chageProgress(getActivity(), newProgress);
             }
         });
-        seekBar.setProgress(0);
 
         songProgress = (TextView) view.findViewById(R.id.song_progress);
         songTime = (TextView) view.findViewById(R.id.song_time);
@@ -134,6 +136,8 @@ public class PlaySongDialogFragment extends DialogFragment implements View.OnCli
         prev.setOnClickListener(this);
         playPause.setOnClickListener(this);
         next.setOnClickListener(this);
+
+
 
         Bundle extra = getArguments();
         if(extra != null) {
@@ -179,7 +183,8 @@ public class PlaySongDialogFragment extends DialogFragment implements View.OnCli
                 Integer i[] = (Integer[])msg.obj;
                 songTime.setText(UtilFunctions.getDuration(i[1]));
                 songProgress.setText(UtilFunctions.getDuration(i[0]));
-                seekBar.setProgress(i[2]);
+                if(!seekBarDragging)
+                    seekBar.setProgress(i[2]);
             }
         };
     }
@@ -486,11 +491,21 @@ public class PlaySongDialogFragment extends DialogFragment implements View.OnCli
     @Override
     public void pausePlay() {
 //        if(isVisible()) {
-            if (PlayerConstants.SONG_PAUSED) {
-                playPause.setImageResource(playRs);
-            } else {
-                playPause.setImageResource(pauseRs);
-            }
+        if (PlayerConstants.SONG_PAUSED) {
+            playPause.setImageResource(playRs);
+        } else {
+            playPause.setImageResource(pauseRs);
+        }
+        if(onPlayPause != null)
+            onPlayPause.onPlayPause();
 //        }
+    }
+
+    public void setOnPlayPause(OnPlayPause onPlayPause) {
+        this.onPlayPause = onPlayPause;
+    }
+
+    public interface OnPlayPause{
+        public void onPlayPause();
     }
 }

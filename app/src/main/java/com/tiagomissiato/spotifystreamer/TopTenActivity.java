@@ -13,12 +13,17 @@ import android.support.v7.graphics.Palette;
 import android.support.v7.widget.Toolbar;
 import android.transition.ChangeImageTransform;
 import android.transition.TransitionSet;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 
 import com.tiagomissiato.spotifystreamer.adapter.ArtistTopTrackAdapter;
 import com.tiagomissiato.spotifystreamer.fragment.TopTenFragment;
 import com.tiagomissiato.spotifystreamer.helper.PlayerConstants;
+import com.tiagomissiato.spotifystreamer.helper.UtilFunctions;
 import com.tiagomissiato.spotifystreamer.model.Artist;
+import com.tiagomissiato.spotifystreamer.model.Track;
+import com.tiagomissiato.spotifystreamer.service.SongService;
 
 
 public class TopTenActivity extends AppCompatActivity implements ArtistTopTrackAdapter.OnItemClicked {
@@ -79,6 +84,14 @@ public class TopTenActivity extends AppCompatActivity implements ArtistTopTrackA
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+
+        //to check if should show now playing button
+        invalidateOptionsMenu();
+    }
+
+    @Override
     public void onClicked(com.tiagomissiato.spotifystreamer.model.Track item, Palette palette, View image, String url) {
 
         PlayerConstants.SONGS_LIST = PlayerConstants.SONGS_NEW_LIST;
@@ -99,5 +112,36 @@ public class TopTenActivity extends AppCompatActivity implements ArtistTopTrackA
         } else {
             startActivity(playSong);
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        boolean isServiceRunning = UtilFunctions.isServiceRunning(SongService.class.getName(), this);
+        if(isServiceRunning && !PlayerConstants.SONG_PAUSED)
+            getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.action_now_playing) {
+            Track track = PlayerConstants.SONGS_LIST.findNode(PlayerConstants.SONG_NUMBER);
+
+            Intent playSong = new Intent(this, PlaySongActivity.class);
+
+            Bundle bnd = new Bundle();
+            bnd.putSerializable(PlaySongActivity.TRACK, track);
+
+            bnd.putString("IMAGE_URL", UtilFunctions.getBigImageUrl(track.album.images));
+            playSong.putExtras(bnd);
+
+            startActivity(playSong);
+
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 }

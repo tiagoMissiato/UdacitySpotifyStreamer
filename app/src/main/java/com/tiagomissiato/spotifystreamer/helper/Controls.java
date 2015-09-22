@@ -1,6 +1,7 @@
 package com.tiagomissiato.spotifystreamer.helper;
 
 import android.content.Context;
+import android.os.Message;
 
 import com.tiagomissiato.spotifystreamer.R;
 import com.tiagomissiato.spotifystreamer.model.Track;
@@ -43,6 +44,16 @@ public class Controls {
 		PlayerConstants.SONG_NUMBER = track.pos;
 		PlayerConstants.SONG_CHANGE_HANDLER.sendMessage(PlayerConstants.SONG_CHANGE_HANDLER.obtainMessage());
 		PlayerConstants.SONG_PAUSED = false;
+	}
+
+	public static void chageProgress(Context context, int progress) {
+		boolean isServiceRunning = UtilFunctions.isServiceRunning(SongService.class.getName(), context);
+		if (!isServiceRunning || PlayerConstants.SONGS_LIST == null)
+			return;
+
+		Message message = PlayerConstants.CHANGE_PROGRESS.obtainMessage();
+		message.obj = progress;
+		PlayerConstants.CHANGE_PROGRESS.sendMessage(message);
 	}
 
 	private static void sendMessage(String message) {

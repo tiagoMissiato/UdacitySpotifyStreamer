@@ -9,11 +9,9 @@
     android:background="@android:color/transparent"
     tools:context="com.tiagomissiato.spotifystreamer.PlaySongActivity">
 
-    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
+    <RelativeLayout
         android:layout_width="450dp"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
         android:background="#EEEEEE">
 
@@ -25,8 +23,8 @@
 
             <ImageView
                 android:id="@+id/song_image"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_width="450dp"
+                android:layout_height="450dp"
                 android:scaleType="fitXY"
                 android:transitionName="song_album_image"/>
 
@@ -97,39 +95,44 @@
             android:layout_below="@+id/play_buttons"
             />
 
-        <TextView
-            android:id="@+id/song_progress"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/seekBar"
-            android:layout_marginLeft="@dimen/default_margin"
-            android:layout_alignParentLeft="true"/>
-
-        <TextView
-            android:id="@+id/song_time"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/seekBar"
-            android:layout_marginRight="@dimen/default_margin"
-            android:layout_alignParentRight="true"/>
-
-
-        <TextView
-            android:id="@+id/buffering"
+        <RelativeLayout
+            android:id="@+id/seekbar_info"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/seekBar"
-            android:gravity="center_horizontal"
-            android:text="@string/buffering"
-            android:visibility="gone"/>
+            >
+            <TextView
+                android:id="@+id/song_progress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/default_margin"
+                android:layout_alignParentLeft="true"/>
+
+            <TextView
+                android:id="@+id/song_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="@dimen/default_margin"
+                android:layout_alignParentRight="true"/>
+
+
+            <TextView
+                android:id="@+id/buffering"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:text="@string/buffering"
+                android:visibility="gone"/>
+
+        </RelativeLayout>
 
         <LinearLayout
             android:id="@+id/song_info"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_alignParentBottom="true"
-            android:padding="@dimen/element_space">
+            android:padding="@dimen/element_space"
+            android:layout_below="@+id/seekbar_info">
 
             <TextView
                 android:id="@+id/song_name"

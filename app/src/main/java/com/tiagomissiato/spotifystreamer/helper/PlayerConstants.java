@@ -23,5 +23,6 @@ public class PlayerConstants {
 	public static Handler PLAY_PAUSE_HANDLER;
 	//handler for showing song progress defined in Activities(MainActivity, AudioPlayerActivity)
 	public static Handler PROGRESSBAR_HANDLER;
+	public static Handler CHANGE_PROGRESS;
 	public static UIActionsInterface UI_CONTROL_LISTENER;
 }
