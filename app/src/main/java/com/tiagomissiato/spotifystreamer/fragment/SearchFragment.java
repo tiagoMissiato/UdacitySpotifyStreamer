@@ -95,6 +95,8 @@ public class SearchFragment extends Fragment implements ArtistAdapter.OnItemClic
         albumList.setHasFixedSize(true);
         albumList.setItemAnimator(new DefaultItemAnimator());
 
+        System.gc();
+
         return layout;
     }
 

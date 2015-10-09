@@ -72,7 +72,7 @@ public class SongService extends Service implements AudioManager.OnAudioFocusCha
         
         currentVersionSupportBigNotification = UtilFunctions.currentVersionSupportBigNotification();
         timer = new Timer();
-//        mp.setOnCompletionListener(completionListener);
+        mp.setOnCompletionListener(completionListener);
 		super.onCreate();
 	}
 
@@ -123,7 +123,7 @@ public class SongService extends Service implements AudioManager.OnAudioFocusCha
 				@Override
 				public boolean handleMessage(Message msg) {
 					int newProgress = (int) msg.obj;
-					if(mp != null && mp.isPlaying()) {
+					if(mp != null) {
 						int progress = (newProgress * mp.getDuration()) / 100;
 						mp.seekTo(progress);
 					}

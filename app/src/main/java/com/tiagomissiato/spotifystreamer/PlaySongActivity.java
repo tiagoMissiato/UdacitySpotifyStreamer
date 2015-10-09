@@ -4,12 +4,11 @@ import android.annotation.TargetApi;
 import android.app.SharedElementCallback;
 import android.content.Intent;
 import android.content.res.ColorStateList;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
-import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -24,7 +23,6 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.ImageButton;
@@ -35,7 +33,6 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.drawable.GlideDrawable;
 import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.GlideDrawableImageViewTarget;
@@ -48,11 +45,9 @@ import com.tiagomissiato.spotifystreamer.model.Track;
 import com.tiagomissiato.spotifystreamer.model.TrackPalette;
 import com.tiagomissiato.spotifystreamer.service.SongService;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 public class PlaySongActivity extends AppCompatActivity implements View.OnClickListener, UIActionsInterface{
 
@@ -124,7 +119,8 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
         songName = (TextView) findViewById(R.id.song_name);
         songAlbum = (TextView) findViewById(R.id.song_album);
 
-        divider = findViewById(R.id.divider);
+        if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
+            divider = findViewById(R.id.divider);
         songInfo = findViewById(R.id.song_info);
 
         prev.setOnClickListener(this);
@@ -203,7 +199,7 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
             @Override
             public void onResourceReady(GlideDrawable resource, GlideAnimation<? super GlideDrawable> glideAnimation) {
                 //only place image if the big one os not yet loaded
-                if(!loadBigImage)
+                if (!loadBigImage)
                     songImage.setImageDrawable(resource.getCurrent());
 
                 supportStartPostponedEnterTransition();
@@ -313,7 +309,8 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
 
         playPause.setBackgroundTintList(fabList);
         playPause.setRippleColor(palette.muted);
-        divider.setBackgroundColor(palette.muted);
+        if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
+            divider.setBackgroundColor(palette.muted);
         songInfo.setBackgroundColor(palette.muted);
 
         songName.setTextColor(palette.textColor);
@@ -362,7 +359,8 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
 
         playPause.setBackgroundTintList(fabList);
         playPause.setRippleColor(palette.get("muted"));
-        divider.setBackgroundColor(palette.get("muted"));
+        if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
+            divider.setBackgroundColor(palette.get("muted"));
         songInfo.setBackgroundColor(palette.get("muted"));
 
         songName.setTextColor(palette.get("textColor"));
@@ -412,7 +410,8 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
 
         playPause.setBackgroundTintList(fabList);
         playPause.setRippleColor(p.getDarkMutedColor(Color.parseColor("#000000")));
-        divider.setBackgroundColor(p.getMutedColor(Color.parseColor("#000000")));
+        if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
+            divider.setBackgroundColor(p.getMutedColor(Color.parseColor("#000000")));
         songInfo.setBackgroundColor(p.getMutedColor(Color.parseColor("#000000")));
 
         Palette.Swatch swatch = p.getMutedSwatch();
@@ -431,7 +430,6 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
                 Integer i[] = (Integer[])msg.obj;
                 songTime.setText(UtilFunctions.getDuration(i[1]));
                 songProgress.setText(UtilFunctions.getDuration(i[0]));
-                Log.i("PROGRESS","progress: " + i[2]);
                 if(!seekBarDragging)
                     seekBar.setProgress(i[2]);
             }
@@ -457,7 +455,14 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
                 PlayerConstants.SONG_PAUSED = false;
             }
         }
-        pausePlay();
+        playPause.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+            @Override
+            public boolean onPreDraw() {
+                playPause.getViewTreeObserver().removeOnPreDrawListener(this);
+                pausePlay();
+                return false;
+            }
+        });
     }
 
     @Override
@@ -474,8 +479,6 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_play_song, menu);
         return true;
     }
 
@@ -487,9 +490,7 @@ public class PlaySongActivity extends AppCompatActivity implements View.OnClickL
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        } else if (id == android.R.id.home){
+        if (id == android.R.id.home){
             supportFinishAfterTransition();
             return true;
         }

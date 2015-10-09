@@ -173,7 +173,7 @@ public class TopTenFragment extends Fragment{
                             if(treeNodeSize > 0)
                                 populateList();
                             else
-                                hideLoading();
+                                showNoResult();
                         }
                     });
 
