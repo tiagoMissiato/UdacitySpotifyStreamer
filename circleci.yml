@@ -1,7 +1,6 @@
 #
 # Build configuration for Circle CI
 #
-
 general:
     artifacts:
         - /home/ubuntu//UdacitySpotifyStreamer/app/build/outputs/apk/
